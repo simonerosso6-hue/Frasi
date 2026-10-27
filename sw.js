@@ -1,4 +1,4 @@
-const CACHE = 'frasi-di-mezzanotte-v2';
+const CACHE = 'frasi-di-mezzanotte-v3';
 const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', function (e) {

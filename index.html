@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>Frasi di Mezzanotte</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Frasi">
@@ -108,6 +108,23 @@ a.pill{text-decoration:none}
 :root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){color-scheme:dark}}
 </style>
+<style>
+/* Comportamento da app nativa: niente zoom, niente selezione, niente rimbalzo della pagina */
+html{touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%;overscroll-behavior-y:none;background:var(--bg)}
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overscroll-behavior-y:none;min-height:100vh;min-height:100dvh}
+button,a,.tab,.chip,.row,.today{touch-action:manipulation}
+img{-webkit-user-drag:none}
+#sh-img{-webkit-touch-callout:default;-webkit-user-select:auto;user-select:auto}
+.search{display:flex;align-items:center;gap:8px;background:var(--fill);border-radius:10px;padding:0 12px;min-height:40px;margin:0 0 12px}
+.search svg{flex:none;stroke:var(--sub);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.search input{flex:1;min-width:0;height:40px;background:none;border:0;outline:0;font:inherit;font-size:17px;color:var(--fg);-webkit-appearance:none;appearance:none;-webkit-user-select:text;user-select:text}
+.search input::placeholder{color:var(--sub)}
+.search input::-webkit-search-cancel-button{-webkit-appearance:none}
+.today .by{margin-top:-10px;font:italic 400 17px/1.3 var(--serif);color:var(--ink-sub)}
+.today .by:empty{display:none}
+.row .by{margin-top:6px;font:italic 400 15px/1.3 var(--serif);color:var(--sub)}
+</style>
+<script>try{var __t=localStorage.getItem('fdm-theme');if(__t==='light'||__t==='dark')document.documentElement.setAttribute('data-theme',__t)}catch(e){}</script>
 </head>
 <body>
 <div class="wrap">
@@ -118,6 +135,7 @@ a.pill{text-decoration:none}
   <article class="today" id="today">
     <span class="cat" id="t-cat"></span>
     <q id="t-txt"></q>
+    <span class="by" id="t-by"></span>
     <div class="foot">
       <span id="t-n"></span>
       <div class="icons">
@@ -134,8 +152,10 @@ a.pill{text-decoration:none}
 <section id="s-esplora" class="screen" aria-label="Esplora">
   <p class="eyebrow">Raccolta</p>
   <h1>Esplora</h1>
+  <label class="search"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input id="q" type="search" placeholder="Cerca una frase o un autore" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-label="Cerca"></label>
   <div class="chips" id="chips" role="group" aria-label="Temi"></div>
   <div class="list" id="list"></div>
+  <div class="empty" id="noresult" hidden>Nessuna frase trovata. Prova con un'altra parola o scegli un altro tema.</div>
 </section>
 
 <section id="s-preferiti" class="screen" aria-label="Preferiti">
@@ -175,6 +195,11 @@ a.pill{text-decoration:none}
 
   <h2>Immagine e sfondo</h2>
   <button class="pill" id="w-img" style="margin-top:0">Crea immagine o sfondo con la frase di oggi</button>
+
+  <h2>Aspetto dell'app</h2>
+  <div class="seg" id="theme" role="group" aria-label="Tema">
+    <button data-m="auto" class="on">Automatico</button><button data-m="light">Chiaro</button><button data-m="dark">Scuro</button>
+  </div>
 </section>
 
 </div>
@@ -194,23 +219,25 @@ a.pill{text-decoration:none}
     </div>
     <div class="chips" id="sh-pal" role="group" aria-label="Stile" style="margin-bottom:0"></div>
     <button class="pill solid" id="sh-go">Condividi</button>
-    <a class="pill" id="sh-ig" href="instagram://story-camera">Apri le storie di Instagram</a>
+    <button class="pill" id="sh-ig">Copia e apri le storie di Instagram</button>
     <button class="pill" id="sh-copy">Copia la frase</button>
-    <p class="note">Nel menu di condivisione scegli Instagram e poi Storia. Se non compare, tieni premuto sull'immagine, scegli "Salva in Foto", poi apri le storie e scegli l'immagine dalla galleria.</p>
+    <p class="note">Per pubblicare subito: tocca Condividi, scegli Instagram e poi Storie, e l'immagine si carica da sola. Il pulsante di Instagram copia l'immagine e apre la fotocamera delle storie: lì tocca l'icona degli adesivi e scegli l'immagine copiata. Se non compare, usa Condividi oppure tieni premuto sull'anteprima e scegli Salva in Foto.</p>
   </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 (function(){
-  var Q = [{"c": "Tempo", "t": "Il tempo non passa: siamo noi che passiamo attraverso di lui, un po' più leggeri ogni volta."}, {"c": "Tempo", "t": "Ogni ora è un luogo in cui non tornerai, eppure te lo porti addosso."}, {"c": "Tempo", "t": "Non è il passato che pesa, ma tutte le volte che lo abbiamo riscritto."}, {"c": "Tempo", "t": "Domani è solo oggi con un'altra luce."}, {"c": "Tempo", "t": "Aspettare non è perdere tempo, se sai cosa stai aspettando."}, {"c": "Tempo", "t": "Gli anni non ci invecchiano, ci rendono più precisi."}, {"c": "Tempo", "t": "Il presente è l'unica casa che non chiede affitto."}, {"c": "Tempo", "t": "Ricordare è un modo gentile di non lasciare andare."}, {"c": "Silenzio", "t": "Il silenzio non è assenza di parole: è il posto dove le parole si ricordano di cosa significano."}, {"c": "Silenzio", "t": "A volte il rumore più forte è tutto ciò che non hai detto."}, {"c": "Silenzio", "t": "Impara a stare in una stanza vuota senza sentirti solo."}, {"c": "Silenzio", "t": "Chi ascolta il silenzio sente cose che gli altri non sentono."}, {"c": "Silenzio", "t": "Non tutte le risposte arrivano a voce alta."}, {"c": "Silenzio", "t": "Una pausa è già una frase."}, {"c": "Silenzio", "t": "La calma non è fare meno: è sapere cosa lasciare fuori."}, {"c": "Silenzio", "t": "Il vuoto non è un difetto, è lo spazio che rende possibile qualcosa."}, {"c": "Amore", "t": "Amare è scegliere di restare curiosi di qualcuno anche quando lo conosci a memoria."}, {"c": "Amore", "t": "Ci innamoriamo delle persone, ma restiamo per il modo in cui ci fanno sentire a casa."}, {"c": "Amore", "t": "Alcune persone sono un luogo, non un periodo."}, {"c": "Amore", "t": "Il bene vero non fa rumore: si nota quando manca."}, {"c": "Amore", "t": "Non cercare qualcuno che ti completi, cerca qualcuno che ti lasci intero."}, {"c": "Amore", "t": "Dire \"ci sono\" è più difficile che dire \"ti amo\"."}, {"c": "Amore", "t": "Le mani sanno cose che la bocca non osa dire."}, {"c": "Amore", "t": "Perdere qualcuno è scoprire quanta parte di te viveva in lui."}, {"c": "Mente", "t": "I pensieri sono ospiti: puoi offrire loro un tè, ma non devi dargli le chiavi."}, {"c": "Mente", "t": "Ciò che chiami carattere è spesso solo un'abitudine con un bel nome."}, {"c": "Mente", "t": "Non credere a ogni pensiero, nemmeno a quelli che ti somigliano."}, {"c": "Mente", "t": "Ci si perde dentro la testa molto più spesso che fuori."}, {"c": "Mente", "t": "La domanda giusta vale più di cento risposte pronte."}, {"c": "Mente", "t": "Capire è accettare di non aver ancora finito di capire."}, {"c": "Mente", "t": "Sei ciò a cui torni quando nessuno guarda."}, {"c": "Mente", "t": "La mente è un giardino: ciò che non curi cresce comunque."}, {"c": "Notte", "t": "Di notte i pensieri parlano più piano, ma dicono la verità."}, {"c": "Notte", "t": "Il buio non toglie niente: ti mostra solo che le stelle c'erano già."}, {"c": "Notte", "t": "Alle tre del mattino tutto sembra più grande, tranne le soluzioni."}, {"c": "Notte", "t": "La luna non fa niente di speciale: sta lì, e tutti la guardano."}, {"c": "Notte", "t": "Certe sere servono solo a ricordarti che sei vivo."}, {"c": "Notte", "t": "Dormire è fidarsi che il mondo ci aspetti."}, {"c": "Notte", "t": "La città di notte è un grande respiro trattenuto."}, {"c": "Notte", "t": "Dopo il tramonto si è un po' più onesti."}, {"c": "Libertà", "t": "Libero non è chi fa ciò che vuole, ma chi sa perché lo vuole."}, {"c": "Libertà", "t": "Ogni \"no\" detto con calma è un pezzo di libertà."}, {"c": "Libertà", "t": "Non devi diventare qualcuno: puoi anche solo diventare più te."}, {"c": "Libertà", "t": "Cambiare strada non è fallire, è leggere meglio la mappa."}, {"c": "Libertà", "t": "Il coraggio è fare il primo passo prima di vedere la scala."}, {"c": "Libertà", "t": "Non tutto ciò che lasci indietro è una perdita."}, {"c": "Libertà", "t": "A volte ripartire è solo smettere di spiegarsi."}, {"c": "Libertà", "t": "La leggerezza non è non avere peso: è saperlo portare."}];
-  var WIDGET = "// Frase del giorno: widget per Scriptable (Home e schermata di blocco)\nconst Q = [{\"c\": \"Tempo\", \"t\": \"Il tempo non passa: siamo noi che passiamo attraverso di lui, un po' più leggeri ogni volta.\"}, {\"c\": \"Tempo\", \"t\": \"Ogni ora è un luogo in cui non tornerai, eppure te lo porti addosso.\"}, {\"c\": \"Tempo\", \"t\": \"Non è il passato che pesa, ma tutte le volte che lo abbiamo riscritto.\"}, {\"c\": \"Tempo\", \"t\": \"Domani è solo oggi con un'altra luce.\"}, {\"c\": \"Tempo\", \"t\": \"Aspettare non è perdere tempo, se sai cosa stai aspettando.\"}, {\"c\": \"Tempo\", \"t\": \"Gli anni non ci invecchiano, ci rendono più precisi.\"}, {\"c\": \"Tempo\", \"t\": \"Il presente è l'unica casa che non chiede affitto.\"}, {\"c\": \"Tempo\", \"t\": \"Ricordare è un modo gentile di non lasciare andare.\"}, {\"c\": \"Silenzio\", \"t\": \"Il silenzio non è assenza di parole: è il posto dove le parole si ricordano di cosa significano.\"}, {\"c\": \"Silenzio\", \"t\": \"A volte il rumore più forte è tutto ciò che non hai detto.\"}, {\"c\": \"Silenzio\", \"t\": \"Impara a stare in una stanza vuota senza sentirti solo.\"}, {\"c\": \"Silenzio\", \"t\": \"Chi ascolta il silenzio sente cose che gli altri non sentono.\"}, {\"c\": \"Silenzio\", \"t\": \"Non tutte le risposte arrivano a voce alta.\"}, {\"c\": \"Silenzio\", \"t\": \"Una pausa è già una frase.\"}, {\"c\": \"Silenzio\", \"t\": \"La calma non è fare meno: è sapere cosa lasciare fuori.\"}, {\"c\": \"Silenzio\", \"t\": \"Il vuoto non è un difetto, è lo spazio che rende possibile qualcosa.\"}, {\"c\": \"Amore\", \"t\": \"Amare è scegliere di restare curiosi di qualcuno anche quando lo conosci a memoria.\"}, {\"c\": \"Amore\", \"t\": \"Ci innamoriamo delle persone, ma restiamo per il modo in cui ci fanno sentire a casa.\"}, {\"c\": \"Amore\", \"t\": \"Alcune persone sono un luogo, non un periodo.\"}, {\"c\": \"Amore\", \"t\": \"Il bene vero non fa rumore: si nota quando manca.\"}, {\"c\": \"Amore\", \"t\": \"Non cercare qualcuno che ti completi, cerca qualcuno che ti lasci intero.\"}, {\"c\": \"Amore\", \"t\": \"Dire \\\"ci sono\\\" è più difficile che dire \\\"ti amo\\\".\"}, {\"c\": \"Amore\", \"t\": \"Le mani sanno cose che la bocca non osa dire.\"}, {\"c\": \"Amore\", \"t\": \"Perdere qualcuno è scoprire quanta parte di te viveva in lui.\"}, {\"c\": \"Mente\", \"t\": \"I pensieri sono ospiti: puoi offrire loro un tè, ma non devi dargli le chiavi.\"}, {\"c\": \"Mente\", \"t\": \"Ciò che chiami carattere è spesso solo un'abitudine con un bel nome.\"}, {\"c\": \"Mente\", \"t\": \"Non credere a ogni pensiero, nemmeno a quelli che ti somigliano.\"}, {\"c\": \"Mente\", \"t\": \"Ci si perde dentro la testa molto più spesso che fuori.\"}, {\"c\": \"Mente\", \"t\": \"La domanda giusta vale più di cento risposte pronte.\"}, {\"c\": \"Mente\", \"t\": \"Capire è accettare di non aver ancora finito di capire.\"}, {\"c\": \"Mente\", \"t\": \"Sei ciò a cui torni quando nessuno guarda.\"}, {\"c\": \"Mente\", \"t\": \"La mente è un giardino: ciò che non curi cresce comunque.\"}, {\"c\": \"Notte\", \"t\": \"Di notte i pensieri parlano più piano, ma dicono la verità.\"}, {\"c\": \"Notte\", \"t\": \"Il buio non toglie niente: ti mostra solo che le stelle c'erano già.\"}, {\"c\": \"Notte\", \"t\": \"Alle tre del mattino tutto sembra più grande, tranne le soluzioni.\"}, {\"c\": \"Notte\", \"t\": \"La luna non fa niente di speciale: sta lì, e tutti la guardano.\"}, {\"c\": \"Notte\", \"t\": \"Certe sere servono solo a ricordarti che sei vivo.\"}, {\"c\": \"Notte\", \"t\": \"Dormire è fidarsi che il mondo ci aspetti.\"}, {\"c\": \"Notte\", \"t\": \"La città di notte è un grande respiro trattenuto.\"}, {\"c\": \"Notte\", \"t\": \"Dopo il tramonto si è un po' più onesti.\"}, {\"c\": \"Libertà\", \"t\": \"Libero non è chi fa ciò che vuole, ma chi sa perché lo vuole.\"}, {\"c\": \"Libertà\", \"t\": \"Ogni \\\"no\\\" detto con calma è un pezzo di libertà.\"}, {\"c\": \"Libertà\", \"t\": \"Non devi diventare qualcuno: puoi anche solo diventare più te.\"}, {\"c\": \"Libertà\", \"t\": \"Cambiare strada non è fallire, è leggere meglio la mappa.\"}, {\"c\": \"Libertà\", \"t\": \"Il coraggio è fare il primo passo prima di vedere la scala.\"}, {\"c\": \"Libertà\", \"t\": \"Non tutto ciò che lasci indietro è una perdita.\"}, {\"c\": \"Libertà\", \"t\": \"A volte ripartire è solo smettere di spiegarsi.\"}, {\"c\": \"Libertà\", \"t\": \"La leggerezza non è non avere peso: è saperlo portare.\"}];\n\nconst d = new Date();\nconst day = Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);\n\n// Una frase a caso per ogni giorno: resta la stessa fino a mezzanotte, mai uguale a quella di ieri\nfunction rnd(n) {\n  let t = (n + 0x6D2B79F5) | 0;\n  t = Math.imul(t ^ (t >>> 15), t | 1);\n  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);\n  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;\n}\nfunction perm(c) {\n  const a = [...Array(Q.length).keys()];\n  for (let i = a.length - 1; i > 0; i--) {\n    const j = Math.floor(rnd(c * 1000 + i) * (i + 1));\n    [a[i], a[j]] = [a[j], a[i]];\n  }\n  return a;\n}\nfunction pick(n) {\n  const L = Q.length, c = Math.floor(n / L), k = n % L;\n  const p = perm(c);\n  if (k < 2 && p[0] === perm(c - 1)[L - 1]) [p[0], p[1]] = [p[1], p[0]];\n  return p[k];\n}\nconst q = Q[pick(day)];\n\nconst dark = Device.isUsingDarkAppearance();\nconst family = config.widgetFamily || \"medium\";\nconst w = new ListWidget();\n\nif (family === \"accessoryInline\") {\n  // Riga sotto la data: poche parole\n  const s = q.t.length > 34 ? q.t.slice(0, 33).trimEnd() + \"…\" : q.t;\n  w.addText(s);\n} else if (family === \"accessoryCircular\") {\n  const m = w.addText(\"“\");\n  m.font = new Font(\"Georgia\", 40);\n  m.centerAlignText();\n} else if (family === \"accessoryRectangular\") {\n  // Schermata di blocco: niente sfondo, testo piccolo e leggibile\n  w.setPadding(0, 0, 0, 0);\n  const c = w.addText(q.c.toUpperCase());\n  c.font = Font.semiboldSystemFont(9);\n  c.textOpacity = 0.7;\n  const t = w.addText(q.t);\n  t.font = new Font(\"Georgia\", 12);\n  t.minimumScaleFactor = 0.6;\n} else {\n  // Home: piccolo, medio, grande\n  const size = family === \"small\" ? 14 : family === \"large\" ? 24 : 17;\n  w.backgroundColor = new Color(dark ? \"#1c1c1e\" : \"#f5f5f7\");\n  w.setPadding(16, 16, 16, 16);\n\n  const label = w.addText(q.c.toUpperCase());\n  label.font = Font.semiboldSystemFont(10);\n  label.textColor = new Color(\"#ff375f\");\n\n  w.addSpacer(6);\n\n  const t = w.addText(q.t);\n  t.font = new Font(\"Georgia\", size);\n  t.textColor = new Color(dark ? \"#f5f5f7\" : \"#1c1c1e\");\n  t.minimumScaleFactor = 0.5;\n\n  w.addSpacer();\n}\n\nw.refreshAfterDate = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1, 0, 5);\n\nif (config.runsInWidget) {\n  Script.setWidget(w);\n} else {\n  await w.presentMedium();\n}\nScript.complete();\n";
+  var Q = [{"c": "Tempo", "t": "Il tempo non passa: siamo noi che passiamo attraverso di lui, un po' più leggeri ogni volta."}, {"c": "Tempo", "t": "Ogni ora è un luogo in cui non tornerai, eppure te lo porti addosso."}, {"c": "Tempo", "t": "Non è il passato che pesa, ma tutte le volte che lo abbiamo riscritto."}, {"c": "Tempo", "t": "Domani è solo oggi con un'altra luce."}, {"c": "Tempo", "t": "Aspettare non è perdere tempo, se sai cosa stai aspettando."}, {"c": "Tempo", "t": "Gli anni non ci invecchiano, ci rendono più precisi."}, {"c": "Tempo", "t": "Il presente è l'unica casa che non chiede affitto."}, {"c": "Tempo", "t": "Ricordare è un modo gentile di non lasciare andare."}, {"c": "Silenzio", "t": "Il silenzio non è assenza di parole: è il posto dove le parole si ricordano di cosa significano."}, {"c": "Silenzio", "t": "A volte il rumore più forte è tutto ciò che non hai detto."}, {"c": "Silenzio", "t": "Impara a stare in una stanza vuota senza sentirti solo."}, {"c": "Silenzio", "t": "Chi ascolta il silenzio sente cose che gli altri non sentono."}, {"c": "Silenzio", "t": "Non tutte le risposte arrivano a voce alta."}, {"c": "Silenzio", "t": "Una pausa è già una frase."}, {"c": "Silenzio", "t": "La calma non è fare meno: è sapere cosa lasciare fuori."}, {"c": "Silenzio", "t": "Il vuoto non è un difetto, è lo spazio che rende possibile qualcosa."}, {"c": "Amore", "t": "Amare è scegliere di restare curiosi di qualcuno anche quando lo conosci a memoria."}, {"c": "Amore", "t": "Ci innamoriamo delle persone, ma restiamo per il modo in cui ci fanno sentire a casa."}, {"c": "Amore", "t": "Alcune persone sono un luogo, non un periodo."}, {"c": "Amore", "t": "Il bene vero non fa rumore: si nota quando manca."}, {"c": "Amore", "t": "Non cercare qualcuno che ti completi, cerca qualcuno che ti lasci intero."}, {"c": "Amore", "t": "Dire \"ci sono\" è più difficile che dire \"ti amo\"."}, {"c": "Amore", "t": "Le mani sanno cose che la bocca non osa dire."}, {"c": "Amore", "t": "Perdere qualcuno è scoprire quanta parte di te viveva in lui."}, {"c": "Mente", "t": "I pensieri sono ospiti: puoi offrire loro un tè, ma non devi dargli le chiavi."}, {"c": "Mente", "t": "Ciò che chiami carattere è spesso solo un'abitudine con un bel nome."}, {"c": "Mente", "t": "Non credere a ogni pensiero, nemmeno a quelli che ti somigliano."}, {"c": "Mente", "t": "Ci si perde dentro la testa molto più spesso che fuori."}, {"c": "Mente", "t": "La domanda giusta vale più di cento risposte pronte."}, {"c": "Mente", "t": "Capire è accettare di non aver ancora finito di capire."}, {"c": "Mente", "t": "Sei ciò a cui torni quando nessuno guarda."}, {"c": "Mente", "t": "La mente è un giardino: ciò che non curi cresce comunque."}, {"c": "Notte", "t": "Di notte i pensieri parlano più piano, ma dicono la verità."}, {"c": "Notte", "t": "Il buio non toglie niente: ti mostra solo che le stelle c'erano già."}, {"c": "Notte", "t": "Alle tre del mattino tutto sembra più grande, tranne le soluzioni."}, {"c": "Notte", "t": "La luna non fa niente di speciale: sta lì, e tutti la guardano."}, {"c": "Notte", "t": "Certe sere servono solo a ricordarti che sei vivo."}, {"c": "Notte", "t": "Dormire è fidarsi che il mondo ci aspetti."}, {"c": "Notte", "t": "La città di notte è un grande respiro trattenuto."}, {"c": "Notte", "t": "Dopo il tramonto si è un po' più onesti."}, {"c": "Libertà", "t": "Libero non è chi fa ciò che vuole, ma chi sa perché lo vuole."}, {"c": "Libertà", "t": "Ogni \"no\" detto con calma è un pezzo di libertà."}, {"c": "Libertà", "t": "Non devi diventare qualcuno: puoi anche solo diventare più te."}, {"c": "Libertà", "t": "Cambiare strada non è fallire, è leggere meglio la mappa."}, {"c": "Libertà", "t": "Il coraggio è fare il primo passo prima di vedere la scala."}, {"c": "Libertà", "t": "Non tutto ciò che lasci indietro è una perdita."}, {"c": "Libertà", "t": "A volte ripartire è solo smettere di spiegarsi."}, {"c": "Libertà", "t": "La leggerezza non è non avere peso: è saperlo portare."}, {"c": "Tempo", "t": "Non si discende due volte nello stesso fiume.", "a": "Eraclito"}, {"c": "Tempo", "t": "Non è poco il tempo che abbiamo, ma molto quello che ne perdiamo.", "a": "Seneca"}, {"c": "Tempo", "t": "Certi giorni passano senza far rumore, e sono quelli che ci cambiano di più."}, {"c": "Tempo", "t": "Il tempo non guarisce: ci insegna a portare le cose con più grazia."}, {"c": "Silenzio", "t": "Ci sono silenzi che abbracciano e silenzi che chiudono la porta: impara a riconoscerli."}, {"c": "Silenzio", "t": "Nel silenzio anche i pensieri si tolgono le scarpe."}, {"c": "Silenzio", "t": "Non riempire ogni vuoto: certe stanze servono per respirare."}, {"c": "Silenzio", "t": "Si parla per farsi capire, si tace per capire."}, {"c": "Amore", "t": "Amare se stessi è l'inizio di un idillio che dura tutta la vita.", "a": "Oscar Wilde"}, {"c": "Amore", "t": "Certe mancanze hanno la forma esatta di una persona."}, {"c": "Amore", "t": "Il modo più bello di essere amati è sentirsi liberi accanto a qualcuno."}, {"c": "Amore", "t": "Si ama davvero quando il bene dell'altro pesa quanto il proprio."}, {"c": "Mente", "t": "L'anima prende il colore dei suoi pensieri.", "a": "Marco Aurelio"}, {"c": "Mente", "t": "Abbi pazienza verso tutto ciò che è irrisolto nel tuo cuore.", "a": "Rainer Maria Rilke"}, {"c": "Mente", "t": "Chi ha un perché abbastanza forte può sopportare quasi ogni come.", "a": "Friedrich Nietzsche"}, {"c": "Mente", "t": "Non devi vincere ogni discussione, soprattutto quelle che hai con te stesso."}, {"c": "Notte", "t": "Bisogna avere ancora un caos dentro di sé per partorire una stella danzante.", "a": "Friedrich Nietzsche"}, {"c": "Notte", "t": "Ogni finestra accesa di notte è un faro per chi non riesce a dormire."}, {"c": "Notte", "t": "La notte non è il contrario del giorno: è il suo respiro."}, {"c": "Notte", "t": "Chi veglia di notte impara a fare amicizia con i propri pensieri."}, {"c": "Libertà", "t": "Fatti non foste a viver come bruti, ma per seguir virtute e canoscenza.", "a": "Dante Alighieri"}, {"c": "Libertà", "t": "Un paese ci vuole, non fosse altro per il gusto di andarsene via.", "a": "Cesare Pavese"}, {"c": "Libertà", "t": "Un viaggio di mille miglia comincia con un passo.", "a": "Lao Tzu"}, {"c": "Libertà", "t": "Non tutte le porte chiuse sono un rifiuto: alcune sono solo indirizzi sbagliati."}, {"c": "Mare", "t": "E il naufragar m'è dolce in questo mare.", "a": "Giacomo Leopardi"}, {"c": "Mare", "t": "Nessun vento è favorevole a chi non sa dove andare.", "a": "Seneca"}, {"c": "Mare", "t": "Navigare è necessario, vivere non è necessario.", "a": "Plutarco"}, {"c": "Mare", "t": "Il mare non risponde, ma ascolta tutto."}, {"c": "Mare", "t": "Ogni onda torna indietro senza smettere di arrivare."}, {"c": "Mare", "t": "Davanti al mare i problemi si mettono in fila e imparano la loro misura."}, {"c": "Mare", "t": "Il mare insegna a restare: va e viene, ma non se ne va mai davvero."}, {"c": "Mare", "t": "Alcune persone sono come il mare d'inverno: silenziose, grandi, vere."}, {"c": "Mare", "t": "Sulla riva ci si ricorda di essere piccoli, e non è una cosa triste."}, {"c": "Mare", "t": "L'orizzonte non è un confine: è un invito."}, {"c": "Mare", "t": "Il sale sulla pelle è il modo del mare di dirti che sei stato qui."}, {"c": "Mare", "t": "A volte basta una marea per ricominciare."}, {"c": "Mare", "t": "Il mare fa ciò che i discorsi non riescono a fare: ti svuota senza chiedere niente."}, {"c": "Mare", "t": "La sabbia dimentica ogni passo, e per questo ti lascia ripartire."}, {"c": "Mare", "t": "Ci sono giorni da porto e giorni da largo: l'importante è saperli distinguere."}, {"c": "Montagna", "t": "I monti sono maestri muti e fanno discepoli silenziosi.", "a": "Johann Wolfgang Goethe"}, {"c": "Montagna", "t": "Chi striscia al suolo non rischia di cadere come chi sale sulle cime dei monti.", "a": "Søren Kierkegaard"}, {"c": "Montagna", "t": "Chi sale sui monti più alti ride di tutte le tragedie, finte e vere.", "a": "Friedrich Nietzsche"}, {"c": "Montagna", "t": "Le montagne chiamano e io devo andare.", "a": "John Muir"}, {"c": "Montagna", "t": "In montagna impari che la fretta non ti porta più in alto, solo più stanco."}, {"c": "Montagna", "t": "Si sale un passo alla volta, e la vetta è la somma dei passi che non hai mollato."}, {"c": "Montagna", "t": "Il silenzio di una valle all'alba non si spiega: si abita."}, {"c": "Montagna", "t": "La montagna non giudica: ti mostra solo quanto fiato hai."}, {"c": "Montagna", "t": "Dal basso la vetta sembra lontana; dall'alto, il bello è tutto il cammino fatto."}, {"c": "Montagna", "t": "Tra le rocce ho capito che la leggerezza si impara portando poco."}, {"c": "Montagna", "t": "Il bosco in autunno non ha fretta e non si scusa di niente."}, {"c": "Montagna", "t": "A tremila metri le parole si fanno brevi e i pensieri limpidi."}, {"c": "Montagna", "t": "Il rifugio è quel posto dove il caldo ha il sapore di averlo meritato."}, {"c": "Montagna", "t": "Scendere è metà della salita: l'umiltà si impara con le ginocchia."}];
+  var WIDGET = "// Frase del giorno: widget per Scriptable (Home e schermata di blocco)\nconst Q = [{\"c\": \"Tempo\", \"t\": \"Il tempo non passa: siamo noi che passiamo attraverso di lui, un po' più leggeri ogni volta.\"}, {\"c\": \"Tempo\", \"t\": \"Ogni ora è un luogo in cui non tornerai, eppure te lo porti addosso.\"}, {\"c\": \"Tempo\", \"t\": \"Non è il passato che pesa, ma tutte le volte che lo abbiamo riscritto.\"}, {\"c\": \"Tempo\", \"t\": \"Domani è solo oggi con un'altra luce.\"}, {\"c\": \"Tempo\", \"t\": \"Aspettare non è perdere tempo, se sai cosa stai aspettando.\"}, {\"c\": \"Tempo\", \"t\": \"Gli anni non ci invecchiano, ci rendono più precisi.\"}, {\"c\": \"Tempo\", \"t\": \"Il presente è l'unica casa che non chiede affitto.\"}, {\"c\": \"Tempo\", \"t\": \"Ricordare è un modo gentile di non lasciare andare.\"}, {\"c\": \"Silenzio\", \"t\": \"Il silenzio non è assenza di parole: è il posto dove le parole si ricordano di cosa significano.\"}, {\"c\": \"Silenzio\", \"t\": \"A volte il rumore più forte è tutto ciò che non hai detto.\"}, {\"c\": \"Silenzio\", \"t\": \"Impara a stare in una stanza vuota senza sentirti solo.\"}, {\"c\": \"Silenzio\", \"t\": \"Chi ascolta il silenzio sente cose che gli altri non sentono.\"}, {\"c\": \"Silenzio\", \"t\": \"Non tutte le risposte arrivano a voce alta.\"}, {\"c\": \"Silenzio\", \"t\": \"Una pausa è già una frase.\"}, {\"c\": \"Silenzio\", \"t\": \"La calma non è fare meno: è sapere cosa lasciare fuori.\"}, {\"c\": \"Silenzio\", \"t\": \"Il vuoto non è un difetto, è lo spazio che rende possibile qualcosa.\"}, {\"c\": \"Amore\", \"t\": \"Amare è scegliere di restare curiosi di qualcuno anche quando lo conosci a memoria.\"}, {\"c\": \"Amore\", \"t\": \"Ci innamoriamo delle persone, ma restiamo per il modo in cui ci fanno sentire a casa.\"}, {\"c\": \"Amore\", \"t\": \"Alcune persone sono un luogo, non un periodo.\"}, {\"c\": \"Amore\", \"t\": \"Il bene vero non fa rumore: si nota quando manca.\"}, {\"c\": \"Amore\", \"t\": \"Non cercare qualcuno che ti completi, cerca qualcuno che ti lasci intero.\"}, {\"c\": \"Amore\", \"t\": \"Dire \\\"ci sono\\\" è più difficile che dire \\\"ti amo\\\".\"}, {\"c\": \"Amore\", \"t\": \"Le mani sanno cose che la bocca non osa dire.\"}, {\"c\": \"Amore\", \"t\": \"Perdere qualcuno è scoprire quanta parte di te viveva in lui.\"}, {\"c\": \"Mente\", \"t\": \"I pensieri sono ospiti: puoi offrire loro un tè, ma non devi dargli le chiavi.\"}, {\"c\": \"Mente\", \"t\": \"Ciò che chiami carattere è spesso solo un'abitudine con un bel nome.\"}, {\"c\": \"Mente\", \"t\": \"Non credere a ogni pensiero, nemmeno a quelli che ti somigliano.\"}, {\"c\": \"Mente\", \"t\": \"Ci si perde dentro la testa molto più spesso che fuori.\"}, {\"c\": \"Mente\", \"t\": \"La domanda giusta vale più di cento risposte pronte.\"}, {\"c\": \"Mente\", \"t\": \"Capire è accettare di non aver ancora finito di capire.\"}, {\"c\": \"Mente\", \"t\": \"Sei ciò a cui torni quando nessuno guarda.\"}, {\"c\": \"Mente\", \"t\": \"La mente è un giardino: ciò che non curi cresce comunque.\"}, {\"c\": \"Notte\", \"t\": \"Di notte i pensieri parlano più piano, ma dicono la verità.\"}, {\"c\": \"Notte\", \"t\": \"Il buio non toglie niente: ti mostra solo che le stelle c'erano già.\"}, {\"c\": \"Notte\", \"t\": \"Alle tre del mattino tutto sembra più grande, tranne le soluzioni.\"}, {\"c\": \"Notte\", \"t\": \"La luna non fa niente di speciale: sta lì, e tutti la guardano.\"}, {\"c\": \"Notte\", \"t\": \"Certe sere servono solo a ricordarti che sei vivo.\"}, {\"c\": \"Notte\", \"t\": \"Dormire è fidarsi che il mondo ci aspetti.\"}, {\"c\": \"Notte\", \"t\": \"La città di notte è un grande respiro trattenuto.\"}, {\"c\": \"Notte\", \"t\": \"Dopo il tramonto si è un po' più onesti.\"}, {\"c\": \"Libertà\", \"t\": \"Libero non è chi fa ciò che vuole, ma chi sa perché lo vuole.\"}, {\"c\": \"Libertà\", \"t\": \"Ogni \\\"no\\\" detto con calma è un pezzo di libertà.\"}, {\"c\": \"Libertà\", \"t\": \"Non devi diventare qualcuno: puoi anche solo diventare più te.\"}, {\"c\": \"Libertà\", \"t\": \"Cambiare strada non è fallire, è leggere meglio la mappa.\"}, {\"c\": \"Libertà\", \"t\": \"Il coraggio è fare il primo passo prima di vedere la scala.\"}, {\"c\": \"Libertà\", \"t\": \"Non tutto ciò che lasci indietro è una perdita.\"}, {\"c\": \"Libertà\", \"t\": \"A volte ripartire è solo smettere di spiegarsi.\"}, {\"c\": \"Libertà\", \"t\": \"La leggerezza non è non avere peso: è saperlo portare.\"}, {\"c\": \"Tempo\", \"t\": \"Non si discende due volte nello stesso fiume.\", \"a\": \"Eraclito\"}, {\"c\": \"Tempo\", \"t\": \"Non è poco il tempo che abbiamo, ma molto quello che ne perdiamo.\", \"a\": \"Seneca\"}, {\"c\": \"Tempo\", \"t\": \"Certi giorni passano senza far rumore, e sono quelli che ci cambiano di più.\"}, {\"c\": \"Tempo\", \"t\": \"Il tempo non guarisce: ci insegna a portare le cose con più grazia.\"}, {\"c\": \"Silenzio\", \"t\": \"Ci sono silenzi che abbracciano e silenzi che chiudono la porta: impara a riconoscerli.\"}, {\"c\": \"Silenzio\", \"t\": \"Nel silenzio anche i pensieri si tolgono le scarpe.\"}, {\"c\": \"Silenzio\", \"t\": \"Non riempire ogni vuoto: certe stanze servono per respirare.\"}, {\"c\": \"Silenzio\", \"t\": \"Si parla per farsi capire, si tace per capire.\"}, {\"c\": \"Amore\", \"t\": \"Amare se stessi è l'inizio di un idillio che dura tutta la vita.\", \"a\": \"Oscar Wilde\"}, {\"c\": \"Amore\", \"t\": \"Certe mancanze hanno la forma esatta di una persona.\"}, {\"c\": \"Amore\", \"t\": \"Il modo più bello di essere amati è sentirsi liberi accanto a qualcuno.\"}, {\"c\": \"Amore\", \"t\": \"Si ama davvero quando il bene dell'altro pesa quanto il proprio.\"}, {\"c\": \"Mente\", \"t\": \"L'anima prende il colore dei suoi pensieri.\", \"a\": \"Marco Aurelio\"}, {\"c\": \"Mente\", \"t\": \"Abbi pazienza verso tutto ciò che è irrisolto nel tuo cuore.\", \"a\": \"Rainer Maria Rilke\"}, {\"c\": \"Mente\", \"t\": \"Chi ha un perché abbastanza forte può sopportare quasi ogni come.\", \"a\": \"Friedrich Nietzsche\"}, {\"c\": \"Mente\", \"t\": \"Non devi vincere ogni discussione, soprattutto quelle che hai con te stesso.\"}, {\"c\": \"Notte\", \"t\": \"Bisogna avere ancora un caos dentro di sé per partorire una stella danzante.\", \"a\": \"Friedrich Nietzsche\"}, {\"c\": \"Notte\", \"t\": \"Ogni finestra accesa di notte è un faro per chi non riesce a dormire.\"}, {\"c\": \"Notte\", \"t\": \"La notte non è il contrario del giorno: è il suo respiro.\"}, {\"c\": \"Notte\", \"t\": \"Chi veglia di notte impara a fare amicizia con i propri pensieri.\"}, {\"c\": \"Libertà\", \"t\": \"Fatti non foste a viver come bruti, ma per seguir virtute e canoscenza.\", \"a\": \"Dante Alighieri\"}, {\"c\": \"Libertà\", \"t\": \"Un paese ci vuole, non fosse altro per il gusto di andarsene via.\", \"a\": \"Cesare Pavese\"}, {\"c\": \"Libertà\", \"t\": \"Un viaggio di mille miglia comincia con un passo.\", \"a\": \"Lao Tzu\"}, {\"c\": \"Libertà\", \"t\": \"Non tutte le porte chiuse sono un rifiuto: alcune sono solo indirizzi sbagliati.\"}, {\"c\": \"Mare\", \"t\": \"E il naufragar m'è dolce in questo mare.\", \"a\": \"Giacomo Leopardi\"}, {\"c\": \"Mare\", \"t\": \"Nessun vento è favorevole a chi non sa dove andare.\", \"a\": \"Seneca\"}, {\"c\": \"Mare\", \"t\": \"Navigare è necessario, vivere non è necessario.\", \"a\": \"Plutarco\"}, {\"c\": \"Mare\", \"t\": \"Il mare non risponde, ma ascolta tutto.\"}, {\"c\": \"Mare\", \"t\": \"Ogni onda torna indietro senza smettere di arrivare.\"}, {\"c\": \"Mare\", \"t\": \"Davanti al mare i problemi si mettono in fila e imparano la loro misura.\"}, {\"c\": \"Mare\", \"t\": \"Il mare insegna a restare: va e viene, ma non se ne va mai davvero.\"}, {\"c\": \"Mare\", \"t\": \"Alcune persone sono come il mare d'inverno: silenziose, grandi, vere.\"}, {\"c\": \"Mare\", \"t\": \"Sulla riva ci si ricorda di essere piccoli, e non è una cosa triste.\"}, {\"c\": \"Mare\", \"t\": \"L'orizzonte non è un confine: è un invito.\"}, {\"c\": \"Mare\", \"t\": \"Il sale sulla pelle è il modo del mare di dirti che sei stato qui.\"}, {\"c\": \"Mare\", \"t\": \"A volte basta una marea per ricominciare.\"}, {\"c\": \"Mare\", \"t\": \"Il mare fa ciò che i discorsi non riescono a fare: ti svuota senza chiedere niente.\"}, {\"c\": \"Mare\", \"t\": \"La sabbia dimentica ogni passo, e per questo ti lascia ripartire.\"}, {\"c\": \"Mare\", \"t\": \"Ci sono giorni da porto e giorni da largo: l'importante è saperli distinguere.\"}, {\"c\": \"Montagna\", \"t\": \"I monti sono maestri muti e fanno discepoli silenziosi.\", \"a\": \"Johann Wolfgang Goethe\"}, {\"c\": \"Montagna\", \"t\": \"Chi striscia al suolo non rischia di cadere come chi sale sulle cime dei monti.\", \"a\": \"Søren Kierkegaard\"}, {\"c\": \"Montagna\", \"t\": \"Chi sale sui monti più alti ride di tutte le tragedie, finte e vere.\", \"a\": \"Friedrich Nietzsche\"}, {\"c\": \"Montagna\", \"t\": \"Le montagne chiamano e io devo andare.\", \"a\": \"John Muir\"}, {\"c\": \"Montagna\", \"t\": \"In montagna impari che la fretta non ti porta più in alto, solo più stanco.\"}, {\"c\": \"Montagna\", \"t\": \"Si sale un passo alla volta, e la vetta è la somma dei passi che non hai mollato.\"}, {\"c\": \"Montagna\", \"t\": \"Il silenzio di una valle all'alba non si spiega: si abita.\"}, {\"c\": \"Montagna\", \"t\": \"La montagna non giudica: ti mostra solo quanto fiato hai.\"}, {\"c\": \"Montagna\", \"t\": \"Dal basso la vetta sembra lontana; dall'alto, il bello è tutto il cammino fatto.\"}, {\"c\": \"Montagna\", \"t\": \"Tra le rocce ho capito che la leggerezza si impara portando poco.\"}, {\"c\": \"Montagna\", \"t\": \"Il bosco in autunno non ha fretta e non si scusa di niente.\"}, {\"c\": \"Montagna\", \"t\": \"A tremila metri le parole si fanno brevi e i pensieri limpidi.\"}, {\"c\": \"Montagna\", \"t\": \"Il rifugio è quel posto dove il caldo ha il sapore di averlo meritato.\"}, {\"c\": \"Montagna\", \"t\": \"Scendere è metà della salita: l'umiltà si impara con le ginocchia.\"}];\n\nconst d = new Date();\nconst day = Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);\n\n// Una frase a caso per ogni giorno: resta la stessa fino a mezzanotte, mai uguale a quella di ieri\nfunction rnd(n) {\n  let t = (n + 0x6D2B79F5) | 0;\n  t = Math.imul(t ^ (t >>> 15), t | 1);\n  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);\n  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;\n}\nfunction perm(c) {\n  const a = [...Array(Q.length).keys()];\n  for (let i = a.length - 1; i > 0; i--) {\n    const j = Math.floor(rnd(c * 1000 + i) * (i + 1));\n    [a[i], a[j]] = [a[j], a[i]];\n  }\n  return a;\n}\nfunction pick(n) {\n  const L = Q.length, c = Math.floor(n / L), k = n % L;\n  const p = perm(c);\n  if (k < 2 && p[0] === perm(c - 1)[L - 1]) [p[0], p[1]] = [p[1], p[0]];\n  return p[k];\n}\nconst q = Q[pick(day)];\n\nconst dark = Device.isUsingDarkAppearance();\nconst family = config.widgetFamily || \"medium\";\nconst w = new ListWidget();\n\nif (family === \"accessoryInline\") {\n  // Riga sotto la data: poche parole\n  const s = q.t.length > 34 ? q.t.slice(0, 33).trimEnd() + \"…\" : q.t;\n  w.addText(s);\n} else if (family === \"accessoryCircular\") {\n  const m = w.addText(\"“\");\n  m.font = new Font(\"Georgia\", 40);\n  m.centerAlignText();\n} else if (family === \"accessoryRectangular\") {\n  // Schermata di blocco: niente sfondo, testo piccolo e leggibile\n  w.setPadding(0, 0, 0, 0);\n  const c = w.addText(q.c.toUpperCase());\n  c.font = Font.semiboldSystemFont(9);\n  c.textOpacity = 0.7;\n  const t = w.addText(q.t);\n  t.font = new Font(\"Georgia\", 12);\n  t.minimumScaleFactor = 0.6;\n} else {\n  // Home: piccolo, medio, grande\n  const size = family === \"small\" ? 14 : family === \"large\" ? 24 : 17;\n  w.backgroundColor = new Color(dark ? \"#1c1c1e\" : \"#f5f5f7\");\n  w.setPadding(16, 16, 16, 16);\n\n  const label = w.addText(q.c.toUpperCase());\n  label.font = Font.semiboldSystemFont(10);\n  label.textColor = new Color(\"#ff375f\");\n\n  w.addSpacer(6);\n\n  const t = w.addText(q.t);\n  t.font = new Font(\"Georgia\", size);\n  t.textColor = new Color(dark ? \"#f5f5f7\" : \"#1c1c1e\");\n  t.minimumScaleFactor = 0.5;\n\n  if (q.a) {\n    w.addSpacer(6);\n    const a = w.addText(\"— \" + q.a);\n    a.font = Font.italicSystemFont(11);\n    a.textColor = new Color(\"#ff375f\");\n  }\n\n  w.addSpacer();\n}\n\nw.refreshAfterDate = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1, 0, 5);\n\nif (config.runsInWidget) {\n  Script.setWidget(w);\n} else {\n  await w.presentMedium();\n}\nScript.complete();\n";
   var $ = function(id){ return document.getElementById(id); };
   var HEART = '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2z"/></svg>';
   var cats = ['Tutte']; Q.forEach(function(q){ if (cats.indexOf(q.c) < 0) cats.push(q.c); });
   var favs = []; try { favs = JSON.parse(localStorage.getItem('fdm-fav') || '[]'); } catch(e){}
   var SHARE = '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M6 11H5.5A1.5 1.5 0 0 0 4 12.5v6A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5v-6a1.5 1.5 0 0 0-1.5-1.5H18"/></svg>';
-  var cat = 'Tutte', shown = 0, fmt = 'story', pal = 'ink';
+  var cat = 'Tutte', shown = 0, fmt = 'story', pal = 'ink', term = '';
+  function norm(s){ return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); }
+  function plain(i){ var q = Q[i]; return '“' + q.t + '”' + (q.a ? ' — ' + q.a : ''); }
 
   function dayIndex(){
     var d = new Date();
@@ -259,6 +286,7 @@ a.pill{text-decoration:none}
     var q = Q[shown];
     $('t-cat').textContent = q.c;
     $('t-txt').textContent = q.t;
+    $('t-by').textContent = q.a ? '— ' + q.a : '';
     $('t-n').textContent = shown === todayIdx ? 'Frase di oggi' : 'Frase a caso';
     var f = $('t-fav'); f.classList.toggle('on', isFav(shown));
     f.setAttribute('aria-label', isFav(shown) ? 'Togli dai preferiti' : 'Aggiungi ai preferiti');
@@ -269,7 +297,9 @@ a.pill{text-decoration:none}
     var txt = document.createElement('div'); txt.className = 'txt';
     var a = document.createElement('div'); a.className = 'q'; a.textContent = q.t;
     var b = document.createElement('div'); b.className = 'c'; b.textContent = q.c;
-    txt.appendChild(a); txt.appendChild(b);
+    txt.appendChild(a);
+    if (q.a) { var u = document.createElement('div'); u.className = 'by'; u.textContent = '— ' + q.a; txt.appendChild(u); }
+    txt.appendChild(b);
     var fb = document.createElement('button'); fb.className = 'ib fav' + (isFav(i) ? ' on' : '');
     fb.setAttribute('aria-label', isFav(i) ? 'Togli dai preferiti' : 'Aggiungi ai preferiti'); fb.innerHTML = HEART;
     fb.addEventListener('click', function(){ toggleFav(i); });
@@ -279,7 +309,16 @@ a.pill{text-decoration:none}
   }
   function renderList(){
     var l = $('list'); l.textContent = '';
-    Q.forEach(function(q,i){ if (cat === 'Tutte' || q.c === cat) l.appendChild(rowFor(i)); });
+    var t = norm(term), n = 0;
+    cats.slice(1).forEach(function(cn){
+      if (cat !== 'Tutte' && cat !== cn) return;
+      Q.forEach(function(q,i){
+        if (q.c !== cn) return;
+        if (t && norm(q.t + ' ' + (q.a || '') + ' ' + q.c).indexOf(t) < 0) return;
+        l.appendChild(rowFor(i)); n++;
+      });
+    });
+    $('noresult').hidden = n > 0; l.hidden = n === 0;
     var c = $('chips'); c.textContent = '';
     cats.forEach(function(n){
       var b = document.createElement('button'); b.className = 'chip' + (n === cat ? ' on' : ''); b.textContent = n;
@@ -310,7 +349,7 @@ a.pill{text-decoration:none}
 
   $('date').textContent = new Date().toLocaleDateString('it-IT', {weekday:'long', day:'numeric', month:'long'});
   $('t-fav').addEventListener('click', function(){ toggleFav(shown); });
-  $('t-copy').addEventListener('click', function(){ copy('“' + Q[shown].t + '”', 'Frase copiata'); });
+  $('t-copy').addEventListener('click', function(){ copy(plain(shown), 'Frase copiata'); });
   $('t-rand').addEventListener('click', function(){
     if (shown !== todayIdx) shown = todayIdx;
     else { var n; do { n = Math.floor(Math.random() * Q.length); } while (n === todayIdx); shown = n; }
@@ -321,7 +360,7 @@ a.pill{text-decoration:none}
   $('w-copy').addEventListener('click', function(){ copy(WIDGET, 'Script copiato'); });
   $('w-img').addEventListener('click', function(){ openSheet(todayIdx, 'wall'); });
   $('sh-close').addEventListener('click', closeSheet);
-  $('sh-copy').addEventListener('click', function(){ copy('“' + Q[cur.idx].t + '”', 'Frase copiata'); });
+  $('sh-copy').addEventListener('click', function(){ copy(plain(cur.idx), 'Frase copiata'); });
   $('sh-fmt').addEventListener('click', function(e){
     var f = e.target.dataset && e.target.dataset.f; if (!f) return; fmt = f; syncSheet(); draw();
   });
@@ -329,8 +368,47 @@ a.pill{text-decoration:none}
     var f = cur.file;
     if (f && navigator.canShare && navigator.canShare({ files: [f] })) {
       navigator.share({ files: [f] }).catch(function(){});
-    } else toast('Tieni premuto sull’immagine e scegli Salva in Foto');
+    } else if (cur.blob && !/iP(hone|ad|od)/.test(navigator.userAgent)) {
+      var u = URL.createObjectURL(cur.blob), a = document.createElement('a');
+      a.href = u; a.download = 'frase.png'; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(u); }, 4000); toast('Immagine scaricata');
+    } else toast('Tieni premuto sull’anteprima e scegli Salva in Foto');
   });
+  // Un sito web non può passare l'immagine a Instagram da solo: la copiamo negli appunti e apriamo la fotocamera delle storie
+  $('sh-ig').addEventListener('click', function(){
+    function go(){ location.href = 'instagram://story-camera'; }
+    if (cur.blob && navigator.clipboard && window.ClipboardItem) {
+      navigator.clipboard.write([new ClipboardItem({ 'image/png': cur.blob })]).then(function(){
+        toast('Immagine copiata: in Instagram aggiungila dagli adesivi'); setTimeout(go, 900);
+      }, function(){ toast('Copia non riuscita: usa Condividi'); });
+    } else toast('Usa Condividi e scegli Instagram › Storie');
+  });
+  $('theme').addEventListener('click', function(e){ var m = e.target.dataset && e.target.dataset.m; if (m) setTheme(m); });
+  $('q').addEventListener('input', function(){ term = this.value; renderList(); });
+  $('q').addEventListener('keydown', function(e){ if (e.key === 'Enter') this.blur(); });
+
+  function setTheme(m){
+    var r = document.documentElement;
+    if (m === 'light' || m === 'dark') r.setAttribute('data-theme', m); else r.removeAttribute('data-theme');
+    try { if (m === 'auto') localStorage.removeItem('fdm-theme'); else localStorage.setItem('fdm-theme', m); } catch(e){}
+    document.querySelectorAll('meta[name="theme-color"]').forEach(function(t){
+      if (!t.dataset.o) t.dataset.o = t.content;
+      t.content = m === 'light' ? '#F2F2F7' : m === 'dark' ? '#000000' : t.dataset.o;
+    });
+    document.querySelectorAll('#theme button').forEach(function(b){ b.classList.toggle('on', b.dataset.m === m); });
+  }
+  var savedTheme = 'auto'; try { savedTheme = localStorage.getItem('fdm-theme') || 'auto'; } catch(e){}
+  setTheme(savedTheme);
+
+  // Niente zoom: blocca pizzico e doppio tocco anche dove il browser lo permetterebbe
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){ document.addEventListener(n, function(e){ e.preventDefault(); }); });
+  var lastTap = 0;
+  document.addEventListener('touchend', function(e){
+    var now = Date.now(), t = e.target;
+    if (now - lastTap < 350 && !(t.closest && t.closest('button,a,input,textarea,label'))) e.preventDefault();
+    lastTap = now;
+  }, { passive: false });
+  document.addEventListener('dblclick', function(e){ e.preventDefault(); });
 
   function wrapLines(ctx, text, maxW){
     var words = text.split(' '), lines = [], cur2 = '';
@@ -349,7 +427,7 @@ a.pill{text-decoration:none}
     dawn:  { n:'Alba',       a:'#FFE5D0', b:'#F7B8A6', fg:'#2B1A17', ac:'#C2253F' }
   };
   var SIZES = { story:[1080,1920], sq:[1080,1080], wall:[1080,2340] };
-  var cur = { idx: 0, file: null };
+  var cur = { idx: 0, file: null, blob: null, t: 0 };
 
   function syncSheet(){
     document.querySelectorAll('#sh-fmt button').forEach(function(b){ b.classList.toggle('on', b.dataset.f === fmt); });
@@ -376,13 +454,13 @@ a.pill{text-decoration:none}
     var top = fmt === 'story' ? 280 : fmt === 'wall' ? 620 : 120;
     var bot = fmt === 'story' ? H - 440 : fmt === 'wall' ? H - 420 : H - 180;
     var areaH = bot - top, m = 110, maxW = W - m * 2;
-    var fs = fmt === 'sq' ? 62 : 70, lines, lh;
+    var fs = fmt === 'sq' ? 62 : 70, lines, lh, extra = q.a ? 64 : 0;
     for (;;) {
       ctx.font = '500 ' + fs + 'px "New York", ui-serif, Georgia, serif';
       lines = wrapLines(ctx, q.t, maxW); lh = fs * 1.28;
-      if (lines.length * lh + 250 <= areaH || fs <= 36) break; fs -= 4;
+      if (lines.length * lh + 250 + extra <= areaH || fs <= 36) break; fs -= 4;
     }
-    var total = lines.length * lh + 250;
+    var total = lines.length * lh + 250 + extra;
     var y = top + (areaH - total) / 2;
     ctx.textBaseline = 'alphabetic';
     ctx.fillStyle = P.ac; ctx.font = '700 220px "New York", ui-serif, Georgia, serif';
@@ -390,6 +468,10 @@ a.pill{text-decoration:none}
     y += 150 + fs;
     ctx.fillStyle = P.fg; ctx.font = '500 ' + fs + 'px "New York", ui-serif, Georgia, serif';
     lines.forEach(function(l){ ctx.fillText(l, m, y); y += lh; });
+    if (q.a) {
+      ctx.globalAlpha = 0.75; ctx.font = 'italic 400 40px "New York", ui-serif, Georgia, serif';
+      ctx.fillText('— ' + q.a, m, y + 6); ctx.globalAlpha = 1; y += 64;
+    }
     ctx.fillStyle = P.ac; ctx.font = '600 28px -apple-system, "SF Pro Text", Helvetica, Arial, sans-serif';
     var hair = String.fromCharCode(8202);
     ctx.fillText(q.c.toUpperCase().split('').join(hair), m, y + 30);
@@ -407,8 +489,8 @@ a.pill{text-decoration:none}
       ctx.restore();
     }
     $('sh-img').src = c.toDataURL('image/png');
-    cur.file = null;
-    c.toBlob(function(b){ if (b) { try { cur.file = new File([b], 'frase.png', { type: 'image/png' }); } catch(e){} } }, 'image/png');
+    cur.file = null; cur.blob = null; var tk = ++cur.t;
+    c.toBlob(function(b){ if (!b || tk !== cur.t) return; cur.blob = b; try { cur.file = new File([b], 'frase.png', { type: 'image/png' }); } catch(e){} }, 'image/png');
   }
   shown = todayIdx; renderAll(); renderWidgets(); route();
 })();
