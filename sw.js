@@ -1,4 +1,4 @@
-const CACHE = 'frasi-di-mezzanotte-v1';
+const CACHE = 'frasi-di-mezzanotte-v2';
 const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', function (e) {
@@ -13,15 +13,16 @@ self.addEventListener('activate', function (e) {
   self.clients.claim();
 });
 
+// Prima la rete (così gli aggiornamenti arrivano subito), poi la copia salvata (così funziona offline)
 self.addEventListener('fetch', function (e) {
   if (e.request.method !== 'GET') return;
   e.respondWith(
-    caches.match(e.request).then(function (hit) {
-      return hit || fetch(e.request).then(function (res) {
-        const copy = res.clone();
-        caches.open(CACHE).then(function (c) { c.put(e.request, copy); });
-        return res;
-      });
+    fetch(e.request).then(function (res) {
+      const copy = res.clone();
+      caches.open(CACHE).then(function (c) { c.put(e.request, copy); });
+      return res;
+    }).catch(function () {
+      return caches.match(e.request).then(function (hit) { return hit || caches.match('index.html'); });
     })
   );
 });

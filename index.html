@@ -92,6 +92,15 @@ h2{margin:28px 16px 8px;font-size:13px;font-weight:400;color:var(--sub);text-tra
 .tab{flex:1;max-width:120px;min-height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10px;color:var(--sub)}
 .tab svg{stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .tab.on{color:var(--accent);font-weight:600}
+.sheet{position:fixed;inset:0;z-index:40;background:var(--bg);overflow-y:auto;
+  padding:max(12px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 24px) max(16px,env(safe-area-inset-left,0px))}
+.sheet .in{max-width:560px;margin:0 auto}
+.sheet .bar{display:flex;align-items:center;justify-content:space-between;min-height:44px}
+.sheet .bar b{font-size:17px}
+.sheet .bar button{color:var(--link);font-size:17px;min-height:44px;padding:0 4px}
+.sheet img{display:block;margin:12px auto 16px;max-width:100%;max-height:50vh;border-radius:16px;box-shadow:0 2px 14px rgba(0,0,0,.28)}
+.pill.solid{background:var(--fg);color:var(--bg);font-weight:600}
+a.pill{text-decoration:none}
 @media (prefers-reduced-motion: reduce){.toast{transition:none}}
 </style>
 <style>
@@ -113,12 +122,13 @@ h2{margin:28px 16px 8px;font-size:13px;font-weight:400;color:var(--sub);text-tra
       <span id="t-n"></span>
       <div class="icons">
         <button class="ib fav" id="t-fav" aria-label="Aggiungi ai preferiti"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2z"/></svg></button>
+        <button class="ib" id="t-share" aria-label="Condividi come immagine"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M6 11H5.5A1.5 1.5 0 0 0 4 12.5v6A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5v-6a1.5 1.5 0 0 0-1.5-1.5H18"/></svg></button>
         <button class="ib" id="t-copy" aria-label="Copia la frase"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6.5A2.5 2.5 0 0 0 13.5 4H6.5A2.5 2.5 0 0 0 4 6.5v7A2.5 2.5 0 0 0 6.5 16H8"/></svg></button>
       </div>
     </div>
   </article>
   <button class="pill" id="t-rand">Un'altra frase</button>
-  <button class="pill" id="t-img">Crea un'immagine da questa frase</button>
+  <button class="pill" id="t-img">Condividi come storia o immagine</button>
 </section>
 
 <section id="s-esplora" class="screen" aria-label="Esplora">
@@ -155,16 +165,16 @@ h2{margin:28px 16px 8px;font-size:13px;font-weight:400;color:var(--sub);text-tra
   <button class="pill" id="w-copy">Copia script widget</button>
   <p class="note">La frase del giorno nel widget è la stessa che vedi nella scheda Oggi.</p>
 
-  <h2>Widget Foto o sfondo</h2>
-  <div class="list" style="padding:16px">
-    <div class="seg" id="fmt" role="group" aria-label="Formato"><button class="on" data-f="sq">Quadrato</button><button data-f="wall">Sfondo</button></div>
-    <div class="seg" id="pal" role="group" aria-label="Stile" style="margin-bottom:0"><button class="on" data-p="ink">Inchiostro</button><button data-p="paper">Carta</button><button data-p="sun">Tramonto</button></div>
-  </div>
-  <button class="pill" id="w-img">Crea immagine con la frase di oggi</button>
-  <div id="imgout" hidden>
-    <img id="outimg" alt="Immagine con la frase del giorno">
-    <p class="note">Tieni premuto sull'immagine e scegli "Salva in Foto". Poi usala come sfondo o in un widget Foto.</p>
-  </div>
+  <h2>Schermata di blocco</h2>
+  <ol class="steps list">
+    <li><span>Tieni premuta la schermata di blocco, tocca <b>Personalizza</b> e scegli <b>Blocco</b>.</span></li>
+    <li><span>Tocca lo spazio sotto l'ora, scegli <b>Scriptable</b> e il widget <b>rettangolare</b>.</span></li>
+    <li><span>Tocca il widget aggiunto, seleziona lo script "Frase del giorno" e conferma. Se hai già aggiornato lo script, il testo è più grande e leggibile.</span></li>
+  </ol>
+  <p class="note">Per la riga sopra l'ora o per il widget rotondo usa le altre forme di Scriptable: mostrano una frase abbreviata.</p>
+
+  <h2>Immagine e sfondo</h2>
+  <button class="pill" id="w-img" style="margin-top:0">Crea immagine o sfondo con la frase di oggi</button>
 </section>
 
 </div>
@@ -175,17 +185,32 @@ h2{margin:28px 16px 8px;font-size:13px;font-weight:400;color:var(--sub);text-tra
   <button class="tab" data-t="preferiti"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2z"/></svg>Preferiti</button>
   <button class="tab" data-t="widget"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="8" rx="2.5"/><rect x="3.5" y="14.5" width="8" height="6" rx="2"/><rect x="13.5" y="14.5" width="7" height="6" rx="2"/></svg>Widget</button>
 </nav>
+<div class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-label="Condividi">
+  <div class="in">
+    <div class="bar"><b>Condividi</b><button id="sh-close">Chiudi</button></div>
+    <img id="sh-img" alt="Anteprima dell'immagine con la frase">
+    <div class="seg" id="sh-fmt" role="group" aria-label="Formato">
+      <button data-f="story" class="on">Storia</button><button data-f="sq">Quadrato</button><button data-f="wall">Sfondo</button>
+    </div>
+    <div class="chips" id="sh-pal" role="group" aria-label="Stile" style="margin-bottom:0"></div>
+    <button class="pill solid" id="sh-go">Condividi</button>
+    <a class="pill" id="sh-ig" href="instagram://story-camera">Apri le storie di Instagram</a>
+    <button class="pill" id="sh-copy">Copia la frase</button>
+    <p class="note">Nel menu di condivisione scegli Instagram e poi Storia. Se non compare, tieni premuto sull'immagine, scegli "Salva in Foto", poi apri le storie e scegli l'immagine dalla galleria.</p>
+  </div>
+</div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 (function(){
   var Q = [{"c": "Tempo", "t": "Il tempo non passa: siamo noi che passiamo attraverso di lui, un po' più leggeri ogni volta."}, {"c": "Tempo", "t": "Ogni ora è un luogo in cui non tornerai, eppure te lo porti addosso."}, {"c": "Tempo", "t": "Non è il passato che pesa, ma tutte le volte che lo abbiamo riscritto."}, {"c": "Tempo", "t": "Domani è solo oggi con un'altra luce."}, {"c": "Tempo", "t": "Aspettare non è perdere tempo, se sai cosa stai aspettando."}, {"c": "Tempo", "t": "Gli anni non ci invecchiano, ci rendono più precisi."}, {"c": "Tempo", "t": "Il presente è l'unica casa che non chiede affitto."}, {"c": "Tempo", "t": "Ricordare è un modo gentile di non lasciare andare."}, {"c": "Silenzio", "t": "Il silenzio non è assenza di parole: è il posto dove le parole si ricordano di cosa significano."}, {"c": "Silenzio", "t": "A volte il rumore più forte è tutto ciò che non hai detto."}, {"c": "Silenzio", "t": "Impara a stare in una stanza vuota senza sentirti solo."}, {"c": "Silenzio", "t": "Chi ascolta il silenzio sente cose che gli altri non sentono."}, {"c": "Silenzio", "t": "Non tutte le risposte arrivano a voce alta."}, {"c": "Silenzio", "t": "Una pausa è già una frase."}, {"c": "Silenzio", "t": "La calma non è fare meno: è sapere cosa lasciare fuori."}, {"c": "Silenzio", "t": "Il vuoto non è un difetto, è lo spazio che rende possibile qualcosa."}, {"c": "Amore", "t": "Amare è scegliere di restare curiosi di qualcuno anche quando lo conosci a memoria."}, {"c": "Amore", "t": "Ci innamoriamo delle persone, ma restiamo per il modo in cui ci fanno sentire a casa."}, {"c": "Amore", "t": "Alcune persone sono un luogo, non un periodo."}, {"c": "Amore", "t": "Il bene vero non fa rumore: si nota quando manca."}, {"c": "Amore", "t": "Non cercare qualcuno che ti completi, cerca qualcuno che ti lasci intero."}, {"c": "Amore", "t": "Dire \"ci sono\" è più difficile che dire \"ti amo\"."}, {"c": "Amore", "t": "Le mani sanno cose che la bocca non osa dire."}, {"c": "Amore", "t": "Perdere qualcuno è scoprire quanta parte di te viveva in lui."}, {"c": "Mente", "t": "I pensieri sono ospiti: puoi offrire loro un tè, ma non devi dargli le chiavi."}, {"c": "Mente", "t": "Ciò che chiami carattere è spesso solo un'abitudine con un bel nome."}, {"c": "Mente", "t": "Non credere a ogni pensiero, nemmeno a quelli che ti somigliano."}, {"c": "Mente", "t": "Ci si perde dentro la testa molto più spesso che fuori."}, {"c": "Mente", "t": "La domanda giusta vale più di cento risposte pronte."}, {"c": "Mente", "t": "Capire è accettare di non aver ancora finito di capire."}, {"c": "Mente", "t": "Sei ciò a cui torni quando nessuno guarda."}, {"c": "Mente", "t": "La mente è un giardino: ciò che non curi cresce comunque."}, {"c": "Notte", "t": "Di notte i pensieri parlano più piano, ma dicono la verità."}, {"c": "Notte", "t": "Il buio non toglie niente: ti mostra solo che le stelle c'erano già."}, {"c": "Notte", "t": "Alle tre del mattino tutto sembra più grande, tranne le soluzioni."}, {"c": "Notte", "t": "La luna non fa niente di speciale: sta lì, e tutti la guardano."}, {"c": "Notte", "t": "Certe sere servono solo a ricordarti che sei vivo."}, {"c": "Notte", "t": "Dormire è fidarsi che il mondo ci aspetti."}, {"c": "Notte", "t": "La città di notte è un grande respiro trattenuto."}, {"c": "Notte", "t": "Dopo il tramonto si è un po' più onesti."}, {"c": "Libertà", "t": "Libero non è chi fa ciò che vuole, ma chi sa perché lo vuole."}, {"c": "Libertà", "t": "Ogni \"no\" detto con calma è un pezzo di libertà."}, {"c": "Libertà", "t": "Non devi diventare qualcuno: puoi anche solo diventare più te."}, {"c": "Libertà", "t": "Cambiare strada non è fallire, è leggere meglio la mappa."}, {"c": "Libertà", "t": "Il coraggio è fare il primo passo prima di vedere la scala."}, {"c": "Libertà", "t": "Non tutto ciò che lasci indietro è una perdita."}, {"c": "Libertà", "t": "A volte ripartire è solo smettere di spiegarsi."}, {"c": "Libertà", "t": "La leggerezza non è non avere peso: è saperlo portare."}];
-  var WIDGET = "// Frase del giorno: widget per Scriptable\nconst Q = [{\"c\": \"Tempo\", \"t\": \"Il tempo non passa: siamo noi che passiamo attraverso di lui, un po' più leggeri ogni volta.\"}, {\"c\": \"Tempo\", \"t\": \"Ogni ora è un luogo in cui non tornerai, eppure te lo porti addosso.\"}, {\"c\": \"Tempo\", \"t\": \"Non è il passato che pesa, ma tutte le volte che lo abbiamo riscritto.\"}, {\"c\": \"Tempo\", \"t\": \"Domani è solo oggi con un'altra luce.\"}, {\"c\": \"Tempo\", \"t\": \"Aspettare non è perdere tempo, se sai cosa stai aspettando.\"}, {\"c\": \"Tempo\", \"t\": \"Gli anni non ci invecchiano, ci rendono più precisi.\"}, {\"c\": \"Tempo\", \"t\": \"Il presente è l'unica casa che non chiede affitto.\"}, {\"c\": \"Tempo\", \"t\": \"Ricordare è un modo gentile di non lasciare andare.\"}, {\"c\": \"Silenzio\", \"t\": \"Il silenzio non è assenza di parole: è il posto dove le parole si ricordano di cosa significano.\"}, {\"c\": \"Silenzio\", \"t\": \"A volte il rumore più forte è tutto ciò che non hai detto.\"}, {\"c\": \"Silenzio\", \"t\": \"Impara a stare in una stanza vuota senza sentirti solo.\"}, {\"c\": \"Silenzio\", \"t\": \"Chi ascolta il silenzio sente cose che gli altri non sentono.\"}, {\"c\": \"Silenzio\", \"t\": \"Non tutte le risposte arrivano a voce alta.\"}, {\"c\": \"Silenzio\", \"t\": \"Una pausa è già una frase.\"}, {\"c\": \"Silenzio\", \"t\": \"La calma non è fare meno: è sapere cosa lasciare fuori.\"}, {\"c\": \"Silenzio\", \"t\": \"Il vuoto non è un difetto, è lo spazio che rende possibile qualcosa.\"}, {\"c\": \"Amore\", \"t\": \"Amare è scegliere di restare curiosi di qualcuno anche quando lo conosci a memoria.\"}, {\"c\": \"Amore\", \"t\": \"Ci innamoriamo delle persone, ma restiamo per il modo in cui ci fanno sentire a casa.\"}, {\"c\": \"Amore\", \"t\": \"Alcune persone sono un luogo, non un periodo.\"}, {\"c\": \"Amore\", \"t\": \"Il bene vero non fa rumore: si nota quando manca.\"}, {\"c\": \"Amore\", \"t\": \"Non cercare qualcuno che ti completi, cerca qualcuno che ti lasci intero.\"}, {\"c\": \"Amore\", \"t\": \"Dire \\\"ci sono\\\" è più difficile che dire \\\"ti amo\\\".\"}, {\"c\": \"Amore\", \"t\": \"Le mani sanno cose che la bocca non osa dire.\"}, {\"c\": \"Amore\", \"t\": \"Perdere qualcuno è scoprire quanta parte di te viveva in lui.\"}, {\"c\": \"Mente\", \"t\": \"I pensieri sono ospiti: puoi offrire loro un tè, ma non devi dargli le chiavi.\"}, {\"c\": \"Mente\", \"t\": \"Ciò che chiami carattere è spesso solo un'abitudine con un bel nome.\"}, {\"c\": \"Mente\", \"t\": \"Non credere a ogni pensiero, nemmeno a quelli che ti somigliano.\"}, {\"c\": \"Mente\", \"t\": \"Ci si perde dentro la testa molto più spesso che fuori.\"}, {\"c\": \"Mente\", \"t\": \"La domanda giusta vale più di cento risposte pronte.\"}, {\"c\": \"Mente\", \"t\": \"Capire è accettare di non aver ancora finito di capire.\"}, {\"c\": \"Mente\", \"t\": \"Sei ciò a cui torni quando nessuno guarda.\"}, {\"c\": \"Mente\", \"t\": \"La mente è un giardino: ciò che non curi cresce comunque.\"}, {\"c\": \"Notte\", \"t\": \"Di notte i pensieri parlano più piano, ma dicono la verità.\"}, {\"c\": \"Notte\", \"t\": \"Il buio non toglie niente: ti mostra solo che le stelle c'erano già.\"}, {\"c\": \"Notte\", \"t\": \"Alle tre del mattino tutto sembra più grande, tranne le soluzioni.\"}, {\"c\": \"Notte\", \"t\": \"La luna non fa niente di speciale: sta lì, e tutti la guardano.\"}, {\"c\": \"Notte\", \"t\": \"Certe sere servono solo a ricordarti che sei vivo.\"}, {\"c\": \"Notte\", \"t\": \"Dormire è fidarsi che il mondo ci aspetti.\"}, {\"c\": \"Notte\", \"t\": \"La città di notte è un grande respiro trattenuto.\"}, {\"c\": \"Notte\", \"t\": \"Dopo il tramonto si è un po' più onesti.\"}, {\"c\": \"Libertà\", \"t\": \"Libero non è chi fa ciò che vuole, ma chi sa perché lo vuole.\"}, {\"c\": \"Libertà\", \"t\": \"Ogni \\\"no\\\" detto con calma è un pezzo di libertà.\"}, {\"c\": \"Libertà\", \"t\": \"Non devi diventare qualcuno: puoi anche solo diventare più te.\"}, {\"c\": \"Libertà\", \"t\": \"Cambiare strada non è fallire, è leggere meglio la mappa.\"}, {\"c\": \"Libertà\", \"t\": \"Il coraggio è fare il primo passo prima di vedere la scala.\"}, {\"c\": \"Libertà\", \"t\": \"Non tutto ciò che lasci indietro è una perdita.\"}, {\"c\": \"Libertà\", \"t\": \"A volte ripartire è solo smettere di spiegarsi.\"}, {\"c\": \"Libertà\", \"t\": \"La leggerezza non è non avere peso: è saperlo portare.\"}];\n\nconst d = new Date();\nconst day = Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);\n\n// Una frase a caso per ogni giorno: resta la stessa fino a mezzanotte, mai uguale a quella di ieri\nfunction rnd(n) {\n  let t = (n + 0x6D2B79F5) | 0;\n  t = Math.imul(t ^ (t >>> 15), t | 1);\n  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);\n  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;\n}\nfunction perm(c) {\n  const a = [...Array(Q.length).keys()];\n  for (let i = a.length - 1; i > 0; i--) {\n    const j = Math.floor(rnd(c * 1000 + i) * (i + 1));\n    [a[i], a[j]] = [a[j], a[i]];\n  }\n  return a;\n}\nfunction pick(n) {\n  const L = Q.length, c = Math.floor(n / L), k = n % L;\n  const p = perm(c);\n  if (k < 2 && p[0] === perm(c - 1)[L - 1]) [p[0], p[1]] = [p[1], p[0]];\n  return p[k];\n}\nconst q = Q[pick(day)];\n\nconst dark = Device.isUsingDarkAppearance();\nconst family = config.widgetFamily || \"medium\";\nconst size = family === \"small\" ? 14 : family === \"large\" ? 24 : 17;\n\nconst w = new ListWidget();\nw.backgroundColor = new Color(dark ? \"#1c1c1e\" : \"#f5f5f7\");\nw.setPadding(16, 16, 16, 16);\n\nconst label = w.addText(q.c.toUpperCase());\nlabel.font = Font.semiboldSystemFont(10);\nlabel.textColor = new Color(\"#ff375f\");\n\nw.addSpacer(6);\n\nconst t = w.addText(q.t);\nt.font = new Font(\"Georgia\", size);\nt.textColor = new Color(dark ? \"#f5f5f7\" : \"#1c1c1e\");\nt.minimumScaleFactor = 0.5;\n\nw.addSpacer();\n\nw.refreshAfterDate = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1, 0, 5);\n\nif (config.runsInWidget) {\n  Script.setWidget(w);\n} else {\n  await w.presentMedium();\n}\nScript.complete();\n";
+  var WIDGET = "// Frase del giorno: widget per Scriptable (Home e schermata di blocco)\nconst Q = [{\"c\": \"Tempo\", \"t\": \"Il tempo non passa: siamo noi che passiamo attraverso di lui, un po' più leggeri ogni volta.\"}, {\"c\": \"Tempo\", \"t\": \"Ogni ora è un luogo in cui non tornerai, eppure te lo porti addosso.\"}, {\"c\": \"Tempo\", \"t\": \"Non è il passato che pesa, ma tutte le volte che lo abbiamo riscritto.\"}, {\"c\": \"Tempo\", \"t\": \"Domani è solo oggi con un'altra luce.\"}, {\"c\": \"Tempo\", \"t\": \"Aspettare non è perdere tempo, se sai cosa stai aspettando.\"}, {\"c\": \"Tempo\", \"t\": \"Gli anni non ci invecchiano, ci rendono più precisi.\"}, {\"c\": \"Tempo\", \"t\": \"Il presente è l'unica casa che non chiede affitto.\"}, {\"c\": \"Tempo\", \"t\": \"Ricordare è un modo gentile di non lasciare andare.\"}, {\"c\": \"Silenzio\", \"t\": \"Il silenzio non è assenza di parole: è il posto dove le parole si ricordano di cosa significano.\"}, {\"c\": \"Silenzio\", \"t\": \"A volte il rumore più forte è tutto ciò che non hai detto.\"}, {\"c\": \"Silenzio\", \"t\": \"Impara a stare in una stanza vuota senza sentirti solo.\"}, {\"c\": \"Silenzio\", \"t\": \"Chi ascolta il silenzio sente cose che gli altri non sentono.\"}, {\"c\": \"Silenzio\", \"t\": \"Non tutte le risposte arrivano a voce alta.\"}, {\"c\": \"Silenzio\", \"t\": \"Una pausa è già una frase.\"}, {\"c\": \"Silenzio\", \"t\": \"La calma non è fare meno: è sapere cosa lasciare fuori.\"}, {\"c\": \"Silenzio\", \"t\": \"Il vuoto non è un difetto, è lo spazio che rende possibile qualcosa.\"}, {\"c\": \"Amore\", \"t\": \"Amare è scegliere di restare curiosi di qualcuno anche quando lo conosci a memoria.\"}, {\"c\": \"Amore\", \"t\": \"Ci innamoriamo delle persone, ma restiamo per il modo in cui ci fanno sentire a casa.\"}, {\"c\": \"Amore\", \"t\": \"Alcune persone sono un luogo, non un periodo.\"}, {\"c\": \"Amore\", \"t\": \"Il bene vero non fa rumore: si nota quando manca.\"}, {\"c\": \"Amore\", \"t\": \"Non cercare qualcuno che ti completi, cerca qualcuno che ti lasci intero.\"}, {\"c\": \"Amore\", \"t\": \"Dire \\\"ci sono\\\" è più difficile che dire \\\"ti amo\\\".\"}, {\"c\": \"Amore\", \"t\": \"Le mani sanno cose che la bocca non osa dire.\"}, {\"c\": \"Amore\", \"t\": \"Perdere qualcuno è scoprire quanta parte di te viveva in lui.\"}, {\"c\": \"Mente\", \"t\": \"I pensieri sono ospiti: puoi offrire loro un tè, ma non devi dargli le chiavi.\"}, {\"c\": \"Mente\", \"t\": \"Ciò che chiami carattere è spesso solo un'abitudine con un bel nome.\"}, {\"c\": \"Mente\", \"t\": \"Non credere a ogni pensiero, nemmeno a quelli che ti somigliano.\"}, {\"c\": \"Mente\", \"t\": \"Ci si perde dentro la testa molto più spesso che fuori.\"}, {\"c\": \"Mente\", \"t\": \"La domanda giusta vale più di cento risposte pronte.\"}, {\"c\": \"Mente\", \"t\": \"Capire è accettare di non aver ancora finito di capire.\"}, {\"c\": \"Mente\", \"t\": \"Sei ciò a cui torni quando nessuno guarda.\"}, {\"c\": \"Mente\", \"t\": \"La mente è un giardino: ciò che non curi cresce comunque.\"}, {\"c\": \"Notte\", \"t\": \"Di notte i pensieri parlano più piano, ma dicono la verità.\"}, {\"c\": \"Notte\", \"t\": \"Il buio non toglie niente: ti mostra solo che le stelle c'erano già.\"}, {\"c\": \"Notte\", \"t\": \"Alle tre del mattino tutto sembra più grande, tranne le soluzioni.\"}, {\"c\": \"Notte\", \"t\": \"La luna non fa niente di speciale: sta lì, e tutti la guardano.\"}, {\"c\": \"Notte\", \"t\": \"Certe sere servono solo a ricordarti che sei vivo.\"}, {\"c\": \"Notte\", \"t\": \"Dormire è fidarsi che il mondo ci aspetti.\"}, {\"c\": \"Notte\", \"t\": \"La città di notte è un grande respiro trattenuto.\"}, {\"c\": \"Notte\", \"t\": \"Dopo il tramonto si è un po' più onesti.\"}, {\"c\": \"Libertà\", \"t\": \"Libero non è chi fa ciò che vuole, ma chi sa perché lo vuole.\"}, {\"c\": \"Libertà\", \"t\": \"Ogni \\\"no\\\" detto con calma è un pezzo di libertà.\"}, {\"c\": \"Libertà\", \"t\": \"Non devi diventare qualcuno: puoi anche solo diventare più te.\"}, {\"c\": \"Libertà\", \"t\": \"Cambiare strada non è fallire, è leggere meglio la mappa.\"}, {\"c\": \"Libertà\", \"t\": \"Il coraggio è fare il primo passo prima di vedere la scala.\"}, {\"c\": \"Libertà\", \"t\": \"Non tutto ciò che lasci indietro è una perdita.\"}, {\"c\": \"Libertà\", \"t\": \"A volte ripartire è solo smettere di spiegarsi.\"}, {\"c\": \"Libertà\", \"t\": \"La leggerezza non è non avere peso: è saperlo portare.\"}];\n\nconst d = new Date();\nconst day = Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);\n\n// Una frase a caso per ogni giorno: resta la stessa fino a mezzanotte, mai uguale a quella di ieri\nfunction rnd(n) {\n  let t = (n + 0x6D2B79F5) | 0;\n  t = Math.imul(t ^ (t >>> 15), t | 1);\n  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);\n  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;\n}\nfunction perm(c) {\n  const a = [...Array(Q.length).keys()];\n  for (let i = a.length - 1; i > 0; i--) {\n    const j = Math.floor(rnd(c * 1000 + i) * (i + 1));\n    [a[i], a[j]] = [a[j], a[i]];\n  }\n  return a;\n}\nfunction pick(n) {\n  const L = Q.length, c = Math.floor(n / L), k = n % L;\n  const p = perm(c);\n  if (k < 2 && p[0] === perm(c - 1)[L - 1]) [p[0], p[1]] = [p[1], p[0]];\n  return p[k];\n}\nconst q = Q[pick(day)];\n\nconst dark = Device.isUsingDarkAppearance();\nconst family = config.widgetFamily || \"medium\";\nconst w = new ListWidget();\n\nif (family === \"accessoryInline\") {\n  // Riga sotto la data: poche parole\n  const s = q.t.length > 34 ? q.t.slice(0, 33).trimEnd() + \"…\" : q.t;\n  w.addText(s);\n} else if (family === \"accessoryCircular\") {\n  const m = w.addText(\"“\");\n  m.font = new Font(\"Georgia\", 40);\n  m.centerAlignText();\n} else if (family === \"accessoryRectangular\") {\n  // Schermata di blocco: niente sfondo, testo piccolo e leggibile\n  w.setPadding(0, 0, 0, 0);\n  const c = w.addText(q.c.toUpperCase());\n  c.font = Font.semiboldSystemFont(9);\n  c.textOpacity = 0.7;\n  const t = w.addText(q.t);\n  t.font = new Font(\"Georgia\", 12);\n  t.minimumScaleFactor = 0.6;\n} else {\n  // Home: piccolo, medio, grande\n  const size = family === \"small\" ? 14 : family === \"large\" ? 24 : 17;\n  w.backgroundColor = new Color(dark ? \"#1c1c1e\" : \"#f5f5f7\");\n  w.setPadding(16, 16, 16, 16);\n\n  const label = w.addText(q.c.toUpperCase());\n  label.font = Font.semiboldSystemFont(10);\n  label.textColor = new Color(\"#ff375f\");\n\n  w.addSpacer(6);\n\n  const t = w.addText(q.t);\n  t.font = new Font(\"Georgia\", size);\n  t.textColor = new Color(dark ? \"#f5f5f7\" : \"#1c1c1e\");\n  t.minimumScaleFactor = 0.5;\n\n  w.addSpacer();\n}\n\nw.refreshAfterDate = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1, 0, 5);\n\nif (config.runsInWidget) {\n  Script.setWidget(w);\n} else {\n  await w.presentMedium();\n}\nScript.complete();\n";
   var $ = function(id){ return document.getElementById(id); };
   var HEART = '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2z"/></svg>';
   var cats = ['Tutte']; Q.forEach(function(q){ if (cats.indexOf(q.c) < 0) cats.push(q.c); });
   var favs = []; try { favs = JSON.parse(localStorage.getItem('fdm-fav') || '[]'); } catch(e){}
-  var cat = 'Tutte', shown = 0, fmt = 'sq', pal = 'ink';
+  var SHARE = '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M6 11H5.5A1.5 1.5 0 0 0 4 12.5v6A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5v-6a1.5 1.5 0 0 0-1.5-1.5H18"/></svg>';
+  var cat = 'Tutte', shown = 0, fmt = 'story', pal = 'ink';
 
   function dayIndex(){
     var d = new Date();
@@ -248,7 +273,9 @@ h2{margin:28px 16px 8px;font-size:13px;font-weight:400;color:var(--sub);text-tra
     var fb = document.createElement('button'); fb.className = 'ib fav' + (isFav(i) ? ' on' : '');
     fb.setAttribute('aria-label', isFav(i) ? 'Togli dai preferiti' : 'Aggiungi ai preferiti'); fb.innerHTML = HEART;
     fb.addEventListener('click', function(){ toggleFav(i); });
-    row.appendChild(txt); row.appendChild(fb); return row;
+    var sb = document.createElement('button'); sb.className = 'ib'; sb.setAttribute('aria-label', 'Condividi come immagine'); sb.innerHTML = SHARE;
+    sb.addEventListener('click', function(){ openSheet(i, 'story'); });
+    row.appendChild(txt); row.appendChild(sb); row.appendChild(fb); return row;
   }
   function renderList(){
     var l = $('list'); l.textContent = '';
@@ -289,43 +316,100 @@ h2{margin:28px 16px 8px;font-size:13px;font-weight:400;color:var(--sub);text-tra
     else { var n; do { n = Math.floor(Math.random() * Q.length); } while (n === todayIdx); shown = n; }
     renderToday();
   });
-  $('t-img').addEventListener('click', function(){ location.hash = 'widget'; makeImage(shown); });
+  $('t-img').addEventListener('click', function(){ openSheet(shown, 'story'); });
+  $('t-share').addEventListener('click', function(){ openSheet(shown, 'story'); });
   $('w-copy').addEventListener('click', function(){ copy(WIDGET, 'Script copiato'); });
-  $('w-img').addEventListener('click', function(){ makeImage(todayIdx); });
-  $('fmt').addEventListener('click', function(e){ var f = e.target.dataset && e.target.dataset.f; if (!f) return; fmt = f; document.querySelectorAll('#fmt button').forEach(function(b){ b.classList.toggle('on', b.dataset.f === f); }); });
-  $('pal').addEventListener('click', function(e){ var p = e.target.dataset && e.target.dataset.p; if (!p) return; pal = p; document.querySelectorAll('#pal button').forEach(function(b){ b.classList.toggle('on', b.dataset.p === p); }); });
+  $('w-img').addEventListener('click', function(){ openSheet(todayIdx, 'wall'); });
+  $('sh-close').addEventListener('click', closeSheet);
+  $('sh-copy').addEventListener('click', function(){ copy('“' + Q[cur.idx].t + '”', 'Frase copiata'); });
+  $('sh-fmt').addEventListener('click', function(e){
+    var f = e.target.dataset && e.target.dataset.f; if (!f) return; fmt = f; syncSheet(); draw();
+  });
+  $('sh-go').addEventListener('click', function(){
+    var f = cur.file;
+    if (f && navigator.canShare && navigator.canShare({ files: [f] })) {
+      navigator.share({ files: [f] }).catch(function(){});
+    } else toast('Tieni premuto sull’immagine e scegli Salva in Foto');
+  });
 
   function wrapLines(ctx, text, maxW){
-    var words = text.split(' '), lines = [], cur = '';
+    var words = text.split(' '), lines = [], cur2 = '';
     words.forEach(function(w){
-      var t = cur ? cur + ' ' + w : w;
-      if (ctx.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; } else cur = t;
+      var t = cur2 ? cur2 + ' ' + w : w;
+      if (ctx.measureText(t).width > maxW && cur2) { lines.push(cur2); cur2 = w; } else cur2 = t;
     });
-    if (cur) lines.push(cur); return lines;
+    if (cur2) lines.push(cur2); return lines;
   }
-  function makeImage(i){
-    var q = Q[i], W = 1080, H = fmt === 'wall' ? 2340 : 1080;
+
+  var PALS = {
+    ink:   { n:'Inchiostro', a:'#1C1C1E', b:'#1C1C1E', fg:'#F5F5F7', ac:'#FF375F' },
+    paper: { n:'Carta',      a:'#F5F5F7', b:'#F5F5F7', fg:'#1C1C1E', ac:'#E0214A' },
+    sun:   { n:'Tramonto',   a:'#FF9F6B', b:'#FF5E7E', fg:'#1C1C1E', ac:'#3A0F1A' },
+    sea:   { n:'Mare',       a:'#0B2447', b:'#19506B', fg:'#F5F5F7', ac:'#FFB199' },
+    dawn:  { n:'Alba',       a:'#FFE5D0', b:'#F7B8A6', fg:'#2B1A17', ac:'#C2253F' }
+  };
+  var SIZES = { story:[1080,1920], sq:[1080,1080], wall:[1080,2340] };
+  var cur = { idx: 0, file: null };
+
+  function syncSheet(){
+    document.querySelectorAll('#sh-fmt button').forEach(function(b){ b.classList.toggle('on', b.dataset.f === fmt); });
+    var p = $('sh-pal'); p.textContent = '';
+    Object.keys(PALS).forEach(function(k){
+      var b = document.createElement('button'); b.className = 'chip' + (k === pal ? ' on' : ''); b.textContent = PALS[k].n;
+      b.addEventListener('click', function(){ pal = k; syncSheet(); draw(); }); p.appendChild(b);
+    });
+  }
+  function openSheet(i, f){
+    cur.idx = i; fmt = f || fmt; syncSheet(); draw();
+    $('sheet').hidden = false; document.body.style.overflow = 'hidden';
+    $('sheet').scrollTop = 0; $('sh-close').focus();
+  }
+  function closeSheet(){ $('sheet').hidden = true; document.body.style.overflow = ''; }
+
+  function draw(){
+    var q = Q[cur.idx], S = SIZES[fmt], W = S[0], H = S[1], P = PALS[pal];
     var c = document.createElement('canvas'); c.width = W; c.height = H;
     var ctx = c.getContext('2d');
-    var P = { ink:['#1C1C1E','#1C1C1E','#F5F5F7','#FF375F'], paper:['#F5F5F7','#F5F5F7','#1C1C1E','#FF375F'], sun:['#FF9F6B','#FF5E7E','#1C1C1E','#FFFFFF'] }[pal];
-    var g = ctx.createLinearGradient(0,0,W,H); g.addColorStop(0,P[0]); g.addColorStop(1,P[1]);
-    ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
-    var m = 110, maxW = W - m*2, fs = fmt === 'wall' ? 68 : 62, lines, lh;
-    ctx.textBaseline = 'alphabetic';
+    var g = ctx.createLinearGradient(0, 0, W * 0.4, H); g.addColorStop(0, P.a); g.addColorStop(1, P.b);
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    // Le storie coprono in alto e in basso con i comandi di Instagram: il testo sta nella zona sicura
+    var top = fmt === 'story' ? 280 : fmt === 'wall' ? 620 : 120;
+    var bot = fmt === 'story' ? H - 440 : fmt === 'wall' ? H - 420 : H - 180;
+    var areaH = bot - top, m = 110, maxW = W - m * 2;
+    var fs = fmt === 'sq' ? 62 : 70, lines, lh;
     for (;;) {
       ctx.font = '500 ' + fs + 'px "New York", ui-serif, Georgia, serif';
       lines = wrapLines(ctx, q.t, maxW); lh = fs * 1.28;
-      if (lines.length * lh < H - 520 || fs < 36) break; fs -= 4;
+      if (lines.length * lh + 250 <= areaH || fs <= 36) break; fs -= 4;
     }
-    var total = lines.length * lh, y = (H - total) / 2 + fs;
-    ctx.fillStyle = P[2];
+    var total = lines.length * lh + 250;
+    var y = top + (areaH - total) / 2;
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = P.ac; ctx.font = '700 220px "New York", ui-serif, Georgia, serif';
+    ctx.fillText('“', m - 6, y + 170);
+    y += 150 + fs;
+    ctx.fillStyle = P.fg; ctx.font = '500 ' + fs + 'px "New York", ui-serif, Georgia, serif';
     lines.forEach(function(l){ ctx.fillText(l, m, y); y += lh; });
-    ctx.fillStyle = P[3]; ctx.font = '600 28px -apple-system, "SF Pro Text", Helvetica, Arial, sans-serif';
-    ctx.fillText(q.c.toUpperCase().split('').join(String.fromCharCode(8202)), m, (H - total) / 2 - 40);
-    $('outimg').src = c.toDataURL('image/png'); $('imgout').hidden = false;
-    $('outimg').scrollIntoView({behavior:'smooth', block:'center'});
+    ctx.fillStyle = P.ac; ctx.font = '600 28px -apple-system, "SF Pro Text", Helvetica, Arial, sans-serif';
+    var hair = String.fromCharCode(8202);
+    ctx.fillText(q.c.toUpperCase().split('').join(hair), m, y + 30);
+    // Filigrana: linea sottile, nome dell'app in corsivo e hashtag (storie e quadrato)
+    if (fmt !== 'wall') {
+      var wy = fmt === 'story' ? H - 330 : H - 64;
+      ctx.save(); ctx.textAlign = 'center';
+      ctx.globalAlpha = 0.55; ctx.fillStyle = P.fg;
+      ctx.fillRect(W / 2 - 36, wy - 90, 72, 2);
+      ctx.font = 'italic 500 42px "New York", ui-serif, Georgia, serif';
+      ctx.fillText('Frasi di Mezzanotte', W / 2, wy - 28);
+      ctx.globalAlpha = 0.9; ctx.fillStyle = P.ac;
+      ctx.font = '600 26px -apple-system, "SF Pro Text", Helvetica, Arial, sans-serif';
+      ctx.fillText('#FrasidiMezzanotte'.split('').join(hair), W / 2, wy + 22);
+      ctx.restore();
+    }
+    $('sh-img').src = c.toDataURL('image/png');
+    cur.file = null;
+    c.toBlob(function(b){ if (b) { try { cur.file = new File([b], 'frase.png', { type: 'image/png' }); } catch(e){} } }, 'image/png');
   }
-
   shown = todayIdx; renderAll(); renderWidgets(); route();
 })();
 </script>
