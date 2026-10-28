@@ -1,11 +1,19 @@
-const CACHE = 'frasi-di-mezzanotte-v6';
+const CACHE = 'frasi-di-mezzanotte-v7';
 const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
 
+// Ogni versione ha la sua copia dei file. Quella nuova si scarica in disparte e aspetta:
+// l'app continua a usare la versione corrente finché non tocchi "Aggiorna".
 self.addEventListener('install', function (e) {
-  e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(FILES); }));
+  e.waitUntil(caches.open(CACHE).then(function (c) {
+    return Promise.all(FILES.map(function (u) {
+      return fetch(new Request(u, { cache: 'reload' })).then(function (res) {
+        if (!res.ok) throw new Error('Scarico non riuscito: ' + u);
+        return c.put(u, res);
+      });
+    }));
+  }));
 });
 
-// La nuova versione resta in attesa finché l'utente non tocca "Aggiorna" nell'app
 self.addEventListener('message', function (e) {
   if (e.data === 'SKIP_WAITING') self.skipWaiting();
 });
@@ -17,16 +25,17 @@ self.addEventListener('activate', function (e) {
   self.clients.claim();
 });
 
-// Prima la rete (così gli aggiornamenti arrivano subito), poi la copia salvata (così funziona offline)
+// Sempre la copia salvata della versione in uso (funziona anche offline); la rete solo se manca qualcosa
 self.addEventListener('fetch', function (e) {
   if (e.request.method !== 'GET') return;
   e.respondWith(
-    fetch(e.request, { cache: 'no-cache' }).then(function (res) {
-      const copy = res.clone();
-      caches.open(CACHE).then(function (c) { c.put(e.request, copy); });
-      return res;
-    }).catch(function () {
-      return caches.match(e.request).then(function (hit) { return hit || caches.match('index.html'); });
+    caches.open(CACHE).then(function (c) {
+      return c.match(e.request, { ignoreSearch: true }).then(function (hit) {
+        if (hit) return hit;
+        return fetch(e.request).catch(function () {
+          return e.request.mode === 'navigate' ? c.match('index.html') : Response.error();
+        });
+      });
     })
   );
 });
