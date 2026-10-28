@@ -1,4 +1,4 @@
-const CACHE = 'frasi-di-mezzanotte-v8';
+const CACHE = 'frasi-di-mezzanotte-v9';
 const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
 
 // Ogni versione ha la sua copia dei file. Quella nuova si scarica in disparte e aspetta:

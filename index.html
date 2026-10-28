@@ -261,6 +261,7 @@ html.fit,html.fit body{overflow:hidden}
       <button data-f="story" class="on">Storia</button><button data-f="sq">Quadrato</button><button data-f="wall">Sfondo</button>
     </div>
     <div class="chips" id="sh-pal" role="group" aria-label="Stile" style="margin-bottom:0"></div>
+    <input type="file" id="sh-file" accept="image/*" hidden>
     <button class="pill solid" id="sh-go">Condividi</button>
     <button class="pill" id="sh-ig">Copia e apri le storie di Instagram</button>
     <button class="pill" id="sh-copy">Copia la frase</button>
@@ -578,8 +579,10 @@ html.fit,html.fit body{overflow:hidden}
     paper: { n:'Carta',      a:'#F5F5F7', b:'#F5F5F7', fg:'#1C1C1E', ac:'#E0214A' },
     sun:   { n:'Tramonto',   a:'#FF9F6B', b:'#FF5E7E', fg:'#1C1C1E', ac:'#3A0F1A' },
     sea:   { n:'Mare',       a:'#0B2447', b:'#19506B', fg:'#F5F5F7', ac:'#FFB199' },
-    dawn:  { n:'Alba',       a:'#FFE5D0', b:'#F7B8A6', fg:'#2B1A17', ac:'#C2253F' }
+    dawn:  { n:'Alba',       a:'#FFE5D0', b:'#F7B8A6', fg:'#2B1A17', ac:'#C2253F' },
+    photo: { n:'Foto',       a:'#1C1C1E', b:'#1C1C1E', fg:'#F5F5F7', ac:'#FFB199' }
   };
+  var photo = null; // la foto scelta resta solo in memoria: si perde chiudendo l'app
   var SIZES = { story:[1080,1920], sq:[1080,1080], wall:[1080,2340] };
   var cur = { idx: 0, file: null, blob: null, t: 0 };
 
@@ -588,9 +591,22 @@ html.fit,html.fit body{overflow:hidden}
     var p = $('sh-pal'); p.textContent = '';
     Object.keys(PALS).forEach(function(k){
       var b = document.createElement('button'); b.className = 'chip' + (k === pal ? ' on' : ''); b.textContent = PALS[k].n;
-      b.addEventListener('click', function(){ pal = k; syncSheet(); draw(); }); p.appendChild(b);
+      b.addEventListener('click', function(){
+        if (k === 'photo' && (!photo || pal === 'photo')) { $('sh-file').click(); return; }
+        pal = k; syncSheet(); draw();
+      });
+      if (k === 'photo' && pal === 'photo' && photo) b.textContent = 'Foto · cambia';
+      p.appendChild(b);
     });
   }
+  $('sh-file').addEventListener('change', function(){
+    var f = this.files && this.files[0]; this.value = '';
+    if (!f) return;
+    var u = URL.createObjectURL(f), im = new Image();
+    im.onload = function(){ URL.revokeObjectURL(u); photo = im; pal = 'photo'; syncSheet(); draw(); };
+    im.onerror = function(){ URL.revokeObjectURL(u); toast('Foto non leggibile: prova con un’altra'); };
+    im.src = u;
+  });
   function openSheet(i, f){
     cur.idx = i; fmt = f || fmt; syncSheet(); draw();
     $('sheet').hidden = false; document.body.style.overflow = 'hidden';
@@ -604,6 +620,16 @@ html.fit,html.fit body{overflow:hidden}
     var ctx = c.getContext('2d');
     var g = ctx.createLinearGradient(0, 0, W * 0.4, H); g.addColorStop(0, P.a); g.addColorStop(1, P.b);
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    var onPhoto = pal === 'photo' && photo;
+    if (onPhoto) {
+      // Foto a tutto campo (ritagliata al centro) + scurimento leggero per leggere bene la frase
+      var sc = Math.max(W / photo.naturalWidth, H / photo.naturalHeight), pw = photo.naturalWidth * sc, ph = photo.naturalHeight * sc;
+      ctx.drawImage(photo, (W - pw) / 2, (H - ph) / 2, pw, ph);
+      ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(0, 0, W, H);
+      var sh = ctx.createLinearGradient(0, H * 0.6, 0, H); sh.addColorStop(0, 'rgba(0,0,0,0)'); sh.addColorStop(1, 'rgba(0,0,0,0.35)');
+      ctx.fillStyle = sh; ctx.fillRect(0, 0, W, H);
+      ctx.shadowColor = 'rgba(0,0,0,0.45)'; ctx.shadowBlur = 24;
+    }
     // Le storie coprono in alto e in basso con i comandi di Instagram: il testo sta nella zona sicura
     var top = fmt === 'story' ? 280 : fmt === 'wall' ? 620 : 120;
     var bot = fmt === 'story' ? H - 440 : fmt === 'wall' ? H - 420 : H - 180;
