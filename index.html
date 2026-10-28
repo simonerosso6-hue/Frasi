@@ -239,6 +239,9 @@ html.fit,html.fit body{overflow:hidden}
   <h2>Immagine e sfondo</h2>
   <button class="pill" id="w-img" style="margin-top:0">Crea immagine o sfondo con la frase di oggi</button>
 
+  <h2>Consiglia l'app</h2>
+  <button class="pill" id="w-share" style="margin-top:0">Condividi l'app con un amico</button>
+
   <h2>Aspetto dell'app</h2>
   <div class="seg" id="theme" role="group" aria-label="Tema">
     <button data-m="auto" class="on">Automatico</button><button data-m="light">Chiaro</button><button data-m="dark">Scuro</button>
@@ -672,6 +675,11 @@ html.fit,html.fit body{overflow:hidden}
     cur.file = null; cur.blob = null; var tk = ++cur.t;
     c.toBlob(function(b){ if (!b || tk !== cur.t) return; cur.blob = b; try { cur.file = new File([b], 'frase.png', { type: 'image/png' }); } catch(e){} }, 'image/png');
   }
+  $('w-share').addEventListener('click', function(){
+    var url = location.origin + location.pathname.replace(/[^\/]*$/, '');
+    if (navigator.share) navigator.share({ title: 'Frasi di Mezzanotte', text: 'Una frase filosofica al giorno:', url: url }).catch(function(){});
+    else copy(url, 'Link copiato');
+  });
   shown = todayIdx; renderSel(); renderAll(); renderWidgets(); route();
 })();
 </script>
