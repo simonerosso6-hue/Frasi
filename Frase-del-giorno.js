@@ -49,14 +49,11 @@ if (family === "accessoryInline") {
   m.font = new Font("Georgia", 40);
   m.centerAlignText();
 } else if (family === "accessoryRectangular") {
-  // Schermata di blocco: niente sfondo, testo piccolo e leggibile
+  // Schermata di blocco: solo la frase, il più grande possibile (si rimpicciolisce solo se è lunga)
   w.setPadding(0, 0, 0, 0);
-  const c = w.addText(q.c.toUpperCase());
-  c.font = Font.semiboldSystemFont(9);
-  c.textOpacity = 0.7;
   const t = w.addText(q.t);
-  t.font = new Font("Georgia", 12);
-  t.minimumScaleFactor = 0.6;
+  t.font = new Font("Georgia-Bold", 16);
+  t.minimumScaleFactor = 0.5;
 } else {
   // Home: piccolo, medio, grande
   const size = family === "small" ? 14 : family === "large" ? 24 : 17;
